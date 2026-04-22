@@ -23,7 +23,7 @@ class GoalEditorViewModel @Inject constructor(
 
     var title by mutableStateOf("")
     var description by mutableStateOf("")
-    var icon by mutableStateOf("🎯")
+    var icon by mutableStateOf("track_changes")
     var color by mutableStateOf("#3B82F6")
     var targetDate by mutableStateOf<LocalDate?>(null)
     

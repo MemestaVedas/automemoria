@@ -27,7 +27,7 @@ class BoardViewModel @Inject constructor(
             initialValue = BoardsUiState(isLoading = true)
         )
 
-    fun createBoard(title: String, description: String = "", icon: String = "📋", color: String = "#7C3AED") {
+    fun createBoard(title: String, description: String = "", icon: String = "view_kanban", color: String = "#7C3AED") {
         viewModelScope.launch {
             repository.create(title, description, icon, color)
         }

@@ -18,11 +18,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.automemoria.domain.model.Goal
+import com.automemoria.ui.common.iconForKey
 import com.automemoria.ui.navigation.Screen
 import com.automemoria.ui.theme.AppColors
 
@@ -173,7 +173,12 @@ fun GoalCard(goal: Goal, onClick: () -> Unit) {
                         .background(goalColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(goal.icon ?: "🎯", fontSize = 20.sp)
+                    Icon(
+                        imageVector = iconForKey(goal.icon, fallback = Icons.Default.TrackChanges),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = goalColor
+                    )
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {

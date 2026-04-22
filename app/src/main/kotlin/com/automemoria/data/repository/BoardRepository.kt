@@ -37,7 +37,7 @@ class BoardRepository @Inject constructor(
     suspend fun create(
         title: String,
         description: String = "",
-        icon: String = "📋",
+        icon: String = "view_kanban",
         color: String = "#7C3AED",
         linkedGoalId: String? = null
     ): Board {

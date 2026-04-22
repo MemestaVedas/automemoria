@@ -17,10 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.automemoria.ui.common.iconForKey
 import com.automemoria.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -134,7 +134,12 @@ fun BoardCard(board: com.automemoria.domain.model.Board, onClick: () -> Unit) {
                     .background(color.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(board.icon ?: "📋", fontSize = 20.sp)
+                Icon(
+                    imageVector = iconForKey(board.icon, fallback = Icons.Default.Add),
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = color
+                )
             }
 
             Column {
@@ -161,7 +166,12 @@ fun BoardCard(board: com.automemoria.domain.model.Board, onClick: () -> Unit) {
 fun EmptyBoardsState(padding: PaddingValues, onAdd: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("📋", style = MaterialTheme.typography.displayLarge)
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(Modifier.height(16.dp))
             Text("No boards yet", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))

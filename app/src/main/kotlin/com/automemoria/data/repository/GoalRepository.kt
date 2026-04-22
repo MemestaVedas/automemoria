@@ -73,7 +73,7 @@ class GoalRepository @Inject constructor(
         id: String? = null,
         title: String,
         description: String? = null,
-        icon: String? = "🎯",
+        icon: String? = "track_changes",
         color: String? = "#3B82F6",
         status: GoalStatus = GoalStatus.ACTIVE,
         targetDate: LocalDate? = null,
@@ -141,7 +141,7 @@ class GoalRepository @Inject constructor(
     suspend fun create(
         title: String,
         description: String = "",
-        icon: String = "🎯",
+        icon: String = "track_changes",
         color: String = "#3B82F6",
         targetDate: LocalDate? = null,
         parentId: String? = null,

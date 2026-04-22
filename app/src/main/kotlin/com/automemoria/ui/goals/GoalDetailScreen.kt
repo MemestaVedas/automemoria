@@ -16,12 +16,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.automemoria.domain.model.GoalMilestone
 import com.automemoria.domain.model.Habit
+import com.automemoria.ui.common.iconForKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -139,11 +139,27 @@ fun GoalProgressSection(progress: Int, colorHex: String?) {
                 )
             }
             Spacer(Modifier.height(8.dp))
-            Text(
-                if (progress == 100) "Goal Achieved! 🎉" else "Keep going, you're getting closer!",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (progress == 100) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = color
+                    )
+                    Text(
+                        "Goal Achieved!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Text(
+                        "Keep going, you're getting closer!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
@@ -188,7 +204,12 @@ fun LinkedHabitItem(habit: Habit) {
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(habit.icon ?: "⚡", fontSize = 16.sp)
+                Icon(
+                    imageVector = iconForKey(habit.icon, fallback = Icons.Default.Bolt),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
             Spacer(Modifier.width(12.dp))
             Text(habit.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)

@@ -17,9 +17,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.automemoria.ui.common.iconForKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +94,11 @@ fun GoalEditorScreen(
                                 .clickable { /* TODO: icon picker */ },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(viewModel.icon, fontSize = 24.sp)
+                            Icon(
+                                imageVector = iconForKey(viewModel.icon, fallback = Icons.Default.TrackChanges),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                     }
                     Column(modifier = Modifier.weight(1f)) {

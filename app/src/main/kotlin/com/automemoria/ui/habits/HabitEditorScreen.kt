@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.automemoria.domain.model.HabitFrequency
+import com.automemoria.ui.common.HabitIconOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +91,7 @@ fun HabitEditorScreen(
             return@Scaffold
         }
 
-        val icons = listOf("✅", "💪", "📚", "🏃", "💧", "🧘", "🎯", "🌿", "🍎", "😴")
+        val icons = HabitIconOptions
         val colors = listOf("#7C3AED", "#2563EB", "#0D9488", "#DC2626", "#EA580C", "#16A34A")
 
         LazyColumn(
@@ -126,8 +127,8 @@ fun HabitEditorScreen(
                 Text("Icon", style = MaterialTheme.typography.labelLarge)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    icons.forEach { icon ->
-                        val selected = state.icon == icon
+                    icons.forEach { option ->
+                        val selected = state.icon == option.key
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -135,10 +136,14 @@ fun HabitEditorScreen(
                                     if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                                     RoundedCornerShape(10.dp)
                                 )
-                                .clickable { viewModel.onIconChange(icon) },
+                                .clickable { viewModel.onIconChange(option.key) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(icon)
+                            Icon(
+                                imageVector = option.image,
+                                contentDescription = option.contentDescription,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }

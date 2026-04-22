@@ -22,6 +22,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.automemoria.domain.model.Habit
 import com.automemoria.domain.model.HabitFrequency
+import com.automemoria.ui.common.HabitIconOptions
+import com.automemoria.ui.common.iconForKey
 import com.automemoria.ui.navigation.Screen
 import com.automemoria.ui.theme.AppColors
 
@@ -59,7 +61,12 @@ fun HabitListScreen(
         } else if (uiState.habits.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("🌱", style = MaterialTheme.typography.displayLarge)
+                    Icon(
+                        imageVector = iconForKey("eco"),
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(Modifier.height(16.dp))
                     Text("No habits yet", style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(8.dp))
@@ -140,7 +147,12 @@ fun HabitCard(
                     .background(accentColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(habit.icon ?: "✅", style = MaterialTheme.typography.titleLarge)
+                Icon(
+                    imageVector = iconForKey(habit.icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    tint = accentColor
+                )
             }
 
             // Name + frequency
@@ -166,7 +178,12 @@ fun HabitCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Text("🔥", style = MaterialTheme.typography.bodySmall)
+                    Icon(
+                        imageVector = iconForKey("local_fire_department"),
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = AppColors.Warning
+                    )
                     Spacer(Modifier.width(2.dp))
                     Text(
                         text = "0",
@@ -213,8 +230,8 @@ fun CreateHabitSheet(
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedFreq by remember { mutableStateOf(HabitFrequency.DAILY) }
-    val icons = listOf("✅", "💪", "📚", "🏃", "💧", "🧘", "🎯", "🌿", "🍎", "😴")
-    var selectedIcon by remember { mutableStateOf(icons.first()) }
+    val icons = HabitIconOptions
+    var selectedIcon by remember { mutableStateOf(icons.first().key) }
 
     Column(
         modifier = Modifier
@@ -248,13 +265,13 @@ fun CreateHabitSheet(
         // Icon picker
         Text("Icon", style = MaterialTheme.typography.labelLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            icons.forEach { icon ->
-                val isSelected = icon == selectedIcon
+            icons.forEach { option ->
+                val isSelected = option.key == selectedIcon
                 Surface(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .clickable { selectedIcon = icon },
+                        .clickable { selectedIcon = option.key },
                     color = if (isSelected)
                         MaterialTheme.colorScheme.primaryContainer
                     else
@@ -262,7 +279,11 @@ fun CreateHabitSheet(
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(icon, style = MaterialTheme.typography.bodyLarge)
+                        Icon(
+                            imageVector = option.image,
+                            contentDescription = option.contentDescription,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }

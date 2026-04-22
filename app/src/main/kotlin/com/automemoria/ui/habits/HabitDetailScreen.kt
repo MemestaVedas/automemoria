@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.automemoria.ui.common.iconForKey
 import com.automemoria.ui.navigation.Screen
 import java.time.format.DateTimeFormatter
 
@@ -128,7 +129,12 @@ fun HabitDetailScreen(
                                     .background(accent.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(habit.icon ?: "✅")
+                                Icon(
+                                    imageVector = iconForKey(habit.icon),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = accent
+                                )
                             }
                             Spacer(Modifier.size(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
