@@ -12,12 +12,16 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import com.automemoria.ui.goals.GoalListScreen
+import com.automemoria.ui.goals.GoalDetailScreen
+import com.automemoria.ui.goals.GoalEditorScreen
 import com.automemoria.ui.habits.HabitDetailScreen
 import com.automemoria.ui.habits.HabitEditorScreen
 import com.automemoria.ui.habits.HabitListScreen
 import com.automemoria.ui.home.HomeScreen
 import com.automemoria.ui.calendar.CalendarScreen
 import com.automemoria.ui.kanban.BoardListScreen
+import com.automemoria.ui.kanban.BoardDetailScreen
 import com.automemoria.ui.notes.NoteListScreen
 import com.automemoria.ui.settings.SettingsScreen
 
@@ -40,6 +44,9 @@ sealed class Screen(val route: String) {
     }
     object GoalDetail   : Screen("goal/{goalId}") {
         fun createRoute(id: String) = "goal/$id"
+    }
+    object GoalEditor   : Screen("goal_editor?id={id}") {
+        fun createRoute(id: String? = null) = if (id != null) "goal_editor?id=$id" else "goal_editor"
     }
     object BoardDetail  : Screen("board/{boardId}") {
         fun createRoute(id: String) = "board/$id"
@@ -119,14 +126,17 @@ fun AppNavHost() {
         ) {
             composable(Screen.Home.route)     { HomeScreen(navController) }
             composable(Screen.Habits.route)   { HabitListScreen(navController) }
-            composable(Screen.Goals.route)    { GoalsPlaceholderScreen() }
+            composable(Screen.Goals.route)    { GoalListScreen(navController) }
             composable(Screen.Calendar.route) { CalendarScreen(navController) }
             composable(Screen.Boards.route)   { BoardListScreen(navController) }
+            composable(Screen.BoardDetail.route) { BoardDetailScreen(navController = navController) }
 
             composable(Screen.HabitDetail.route) { backStackEntry ->
                 val habitId = backStackEntry.arguments?.getString("habitId").orEmpty()
                 HabitDetailScreen(navController = navController, habitId = habitId)
             }
+            composable(Screen.GoalDetail.route) { GoalDetailScreen(navController = navController) }
+            composable(Screen.GoalEditor.route) { GoalEditorScreen(navController = navController) }
             composable(Screen.HabitEditor.route)  { HabitEditorScreen(navController = navController) }
             composable(Screen.NoteList.route)     { NoteListScreen(navController) }
             composable(Screen.NoteEditor.route)   { NoteEditorPlaceholder(navController) }
