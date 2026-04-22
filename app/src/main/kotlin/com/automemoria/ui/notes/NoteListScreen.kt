@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,6 +39,11 @@ fun NoteListScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Screen.Wiki.route) }) {
+                        Icon(Icons.Default.FolderOpen, contentDescription = "Open vault")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -137,7 +144,12 @@ fun NoteCard(note: com.automemoria.domain.model.Note, onClick: () -> Unit) {
 fun EmptyNotesState() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("📝", style = MaterialTheme.typography.displayLarge)
+            Icon(
+                Icons.Default.Description,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(Modifier.height(16.dp))
             Text("No notes yet", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))

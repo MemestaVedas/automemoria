@@ -25,6 +25,7 @@ import com.automemoria.ui.kanban.BoardListScreen
 import com.automemoria.ui.kanban.BoardDetailScreen
 import com.automemoria.ui.notes.NoteListScreen
 import com.automemoria.ui.notes.NoteEditorScreen
+import com.automemoria.ui.wiki.WikiScreen
 import com.automemoria.ui.graph.GraphScreen
 import com.automemoria.ui.settings.SettingsScreen
 
@@ -58,6 +59,7 @@ sealed class Screen(val route: String) {
         fun createRoute(id: String? = null) = if (id != null) "event_editor?id=$id" else "event_editor"
     }
     object NoteList     : Screen("notes")
+    object Wiki         : Screen("wiki")
     object NoteEditor   : Screen("note_editor?id={id}") {
         fun createRoute(id: String? = null) = if (id != null) "note_editor?id=$id" else "note_editor"
     }
@@ -150,6 +152,7 @@ fun AppNavHost() {
             composable(Screen.GoalEditor.route) { GoalEditorScreen(navController = navController) }
             composable(Screen.HabitEditor.route)  { HabitEditorScreen(navController = navController) }
             composable(Screen.NoteList.route)     { NoteListScreen(navController) }
+            composable(Screen.Wiki.route)         { WikiScreen(navController = navController) }
             composable(Screen.NoteEditor.route)   { NoteEditorScreen(navController = navController) }
             composable(Screen.Graph.route)        { GraphScreen(navController = navController) }
             composable(Screen.Settings.route)     { SettingsScreen(navController) }

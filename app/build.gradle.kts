@@ -108,6 +108,10 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    // Markdown rendering
+    implementation(libs.markwon.core)
+    implementation(libs.documentfile)
+
     // Core
     implementation(libs.core.ktx)
 

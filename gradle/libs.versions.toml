@@ -16,6 +16,7 @@ lifecycle = "2.8.6"
 security-crypto = "1.1.0-alpha06"
 kotlinx-serialization = "1.7.3"
 coil = "2.7.0"
+markwon = "4.6.2"
 
 [libraries]
 # Compose BOM
@@ -73,6 +74,8 @@ security-crypto = { group = "androidx.security", name = "security-crypto", versi
 
 # Coil
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+markwon-core = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
+documentfile = { group = "androidx.documentfile", name = "documentfile", version = "1.0.1" }
 
 # Timber
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }

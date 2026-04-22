@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.automemoria.ui.common.iconForKey
 import com.automemoria.ui.navigation.Screen
 import com.automemoria.ui.theme.AppColors
 import java.time.LocalDate
@@ -123,7 +124,7 @@ fun HomeScreen(
                     items(uiState.todayHabits) { item ->
                         HabitChip(
                             name = item.habit.name,
-                            icon = item.habit.icon ?: "✅",
+                            iconKey = item.habit.icon,
                             completed = item.completedToday,
                             color = item.habit.color?.let { parseColor(it) }
                                 ?: MaterialTheme.colorScheme.primary,
@@ -200,10 +201,10 @@ fun HomeScreen(
                 modifier = Modifier.padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 24.dp)
             ) {
                 QuickActionCard(
-                    label = "Notes",
+                    label = "Wiki",
                     icon = Icons.Default.Notes,
                     modifier = Modifier.weight(1f),
-                    onClick = { navController.navigate(Screen.NoteList.route) }
+                    onClick = { navController.navigate(Screen.Wiki.route) }
                 )
                 QuickActionCard(
                     label = "Boards",
@@ -237,7 +238,7 @@ fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 @Composable
 fun HabitChip(
     name: String,
-    icon: String,
+    iconKey: String?,
     completed: Boolean,
     color: Color,
     onToggle: () -> Unit
@@ -258,7 +259,12 @@ fun HabitChip(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
-            Text(icon, style = MaterialTheme.typography.bodyLarge)
+            Icon(
+                imageVector = iconForKey(iconKey),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = color
+            )
             Text(
                 text = name,
                 style = MaterialTheme.typography.bodyMedium,
@@ -312,7 +318,12 @@ fun HomeGoalCard(goal: com.automemoria.domain.model.Goal, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(goal.icon ?: "🎯", style = MaterialTheme.typography.headlineSmall)
+            Icon(
+                imageVector = iconForKey(goal.icon, fallback = Icons.Default.TrackChanges),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = color
+            )
             Spacer(Modifier.height(8.dp))
             Text(goal.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1)
             Spacer(Modifier.height(4.dp))
