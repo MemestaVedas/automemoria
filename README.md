@@ -12,11 +12,11 @@ In a world of fleeting moments, we provide the ink.
 
 ### The Services of the Doll
 
-#### **I. Transcribing the Heart (Notes)**
+#### **I. Transcribing the Heart**
 Beyond mere records, these are the letters you write to your future self. Linked by the invisible threads of a knowledge graph, every thought finds its place in the grand tapestry of your mind.
 *Wikilinks, Backlinks, and the Circular Knowledge Graph.*
 
-#### **II. The Steady Rhythm (Habits)**
+#### **II. The Steady Rhythm**
 Character is formed in the quiet repetition of the everyday. We track the frequency of your soul's pulse, ensuring that no streak is broken and no effort is forgotten.
 *Reactive progress and linked synchronization.*
 
@@ -24,7 +24,7 @@ Character is formed in the quiet repetition of the everyday. We track the freque
 To move forward is to organize the chaos. Your ambitions are laid out upon boards of order, moving from the realm of 'concept' to the reality of 'done.'
 *Dynamic boards, columns, and prioritized cards.*
 
-#### **IV. The Horizon (Goals)**
+#### **IV. The Horizon**
 Every doll must have a destination. We map the milestones of your journey, calculating the distance remaining between who you are and who you wish to become.
 *Linked habits and reactive goal progress.*
 
