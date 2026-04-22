@@ -24,6 +24,13 @@ data class HomeUiState(
     val syncStatus: SyncIndicator = SyncIndicator.Idle
 )
 
+data class HabitWithTodayStatus(
+    val habit: Habit,
+    val completedToday: Boolean
+)
+
+enum class SyncIndicator { Idle, Syncing, Error }
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val habitRepository: HabitRepository,

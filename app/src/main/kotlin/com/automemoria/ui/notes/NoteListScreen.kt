@@ -111,7 +111,7 @@ fun NoteCard(note: com.automemoria.domain.model.Note, onClick: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
             }
             Text(
-                note.content,
+                note.content ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 6,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis

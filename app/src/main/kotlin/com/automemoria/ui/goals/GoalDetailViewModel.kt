@@ -34,7 +34,7 @@ class GoalDetailViewModel @Inject constructor(
     
     // For linked habits, we need to filter habits by IDs in goal.linkedHabitIds
     // This is a bit reactive-heavy, but let's do it.
-    private val _habits = habitRepository.observeAll()
+    private val _habits = habitRepository.observeAllHabits()
 
     val uiState: StateFlow<GoalDetailUiState> = combine(_goal, _milestones, _habits) { goal, milestones, habits ->
         val linkedHabits = habits.filter { it.id in (goal?.linkedHabitIds ?: emptyList()) }

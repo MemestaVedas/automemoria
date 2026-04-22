@@ -6,6 +6,7 @@ import com.automemoria.data.repository.NoteRepository
 import com.automemoria.domain.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import com.automemoria.data.local.entity.NoteLinkEntity
 import javax.inject.Inject
 
 data class GraphUiState(

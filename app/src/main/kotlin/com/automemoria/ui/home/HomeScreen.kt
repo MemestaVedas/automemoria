@@ -337,7 +337,7 @@ fun HomeNoteItem(note: com.automemoria.domain.model.Note, onClick: () -> Unit) {
             Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.width(12.dp))
             Text(
-                if (note.title.isNotBlank()) note.title else note.content.take(30),
+                if (note.title.isNotBlank()) note.title else (note.content ?: "").take(30),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1
             )

@@ -30,7 +30,7 @@ class NoteEditorViewModel @Inject constructor(
                 repository.observeNote(noteId).collect { note ->
                     if (note != null) {
                         title = note.title
-                        content = note.content
+                        content = note.content ?: ""
                         tags = note.tags
                         isPinned = note.isPinned
                     }
