@@ -12,6 +12,8 @@ local.properties
 .idea/
 *.iws
 *.ipr
+PRD.md
+agent-prompt-phases-1-9.md
 
 # OS
 .DS_Store
