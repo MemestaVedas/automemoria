@@ -69,7 +69,7 @@ fun WikiScreen(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
         if (uri != null) {
-            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
             runCatching {
                 context.contentResolver.takePersistableUriPermission(uri, flags)
             }
@@ -159,6 +159,7 @@ fun WikiScreen(
                     } else {
                         PagePanel(
                             page = page,
+                            isIndexingLinks = uiState.isIndexingLinks,
                             markwon = markwon,
                             onOpenBacklink = viewModel::openBacklink,
                             modifier = Modifier
@@ -254,6 +255,7 @@ private fun TreePanel(
 @Composable
 private fun PagePanel(
     page: WikiPage,
+    isIndexingLinks: Boolean,
     markwon: Markwon,
     onOpenBacklink: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -321,7 +323,13 @@ private fun PagePanel(
             Spacer(Modifier.height(10.dp))
 
             Text("Backlinks", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            if (page.backlinks.isEmpty()) {
+            if (isIndexingLinks) {
+                Text(
+                    "Indexing links...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (page.backlinks.isEmpty()) {
                 Text(
                     "No backlinks yet",
                     style = MaterialTheme.typography.bodySmall,

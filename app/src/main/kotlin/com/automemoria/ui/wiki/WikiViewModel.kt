@@ -37,6 +37,7 @@ data class WikiTreeItem(
 
 data class WikiUiState(
     val isLoading: Boolean = false,
+    val isIndexingLinks: Boolean = false,
     val vaultUri: String? = null,
     val treeItems: List<WikiTreeItem> = emptyList(),
     val selectedPage: WikiPage? = null,
@@ -47,7 +48,6 @@ private data class MdFile(
     val title: String,
     val path: String,
     val uri: Uri,
-    val content: String,
     val breadcrumbs: List<String>
 )
 
@@ -60,6 +60,8 @@ class WikiViewModel @Inject constructor(
     val uiState: StateFlow<WikiUiState> = _uiState.asStateFlow()
 
     private var cachedFiles: List<MdFile> = emptyList()
+    private val contentCache = mutableMapOf<String, String>()
+    private var backlinksByTargetPath: Map<String, List<String>> = emptyMap()
 
     init {
         val saved = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -84,63 +86,104 @@ class WikiViewModel @Inject constructor(
     }
 
     fun openPage(path: String) {
-        val page = cachedFiles.find { it.path == path } ?: return
-        val backlinks = cachedFiles
-            .filter { source ->
-                parseWikiTargets(source.content).any { target -> resolvesToPath(target, page.path, cachedFiles) }
-            }
-            .map { it.path }
-            .sorted()
-        _uiState.value = _uiState.value.copy(
-            selectedPage = WikiPage(
-                title = page.title,
-                path = page.path,
-                uri = page.uri,
-                content = page.content,
-                breadcrumbs = page.breadcrumbs,
-                backlinks = backlinks
+        viewModelScope.launch {
+            val page = cachedFiles.find { it.path == path } ?: return@launch
+            val content = withContext(Dispatchers.IO) { readContent(page) }
+            _uiState.value = _uiState.value.copy(
+                selectedPage = WikiPage(
+                    title = page.title,
+                    path = page.path,
+                    uri = page.uri,
+                    content = content,
+                    breadcrumbs = page.breadcrumbs,
+                    backlinks = backlinksByTargetPath[page.path].orEmpty()
+                )
             )
-        )
+        }
     }
 
     fun openBacklink(path: String) = openPage(path)
 
     private fun loadVault(vaultUri: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, vaultUri = vaultUri)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                isIndexingLinks = false,
+                error = null,
+                vaultUri = vaultUri
+            )
             try {
                 val (items, files) = withContext(Dispatchers.IO) {
                     scanVault(Uri.parse(vaultUri))
                 }
+
                 cachedFiles = files
+                contentCache.clear()
+                backlinksByTargetPath = emptyMap()
+
+                val firstPage = files.firstOrNull()?.let { first ->
+                    val content = withContext(Dispatchers.IO) { readContent(first) }
+                    WikiPage(
+                        title = first.title,
+                        path = first.path,
+                        uri = first.uri,
+                        content = content,
+                        breadcrumbs = first.breadcrumbs,
+                        backlinks = emptyList()
+                    )
+                }
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     treeItems = items,
-                    selectedPage = files.firstOrNull()?.let { first ->
-                        WikiPage(
-                            title = first.title,
-                            path = first.path,
-                            uri = first.uri,
-                            content = first.content,
-                            breadcrumbs = first.breadcrumbs,
-                            backlinks = files
-                                .filter { source ->
-                                    parseWikiTargets(source.content)
-                                        .any { target -> resolvesToPath(target, first.path, files) }
-                                }
-                                .map { it.path }
-                                .sorted()
-                        )
-                    }
+                    selectedPage = firstPage
                 )
+
+                buildBacklinkIndex(files)
             } catch (t: Throwable) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    isIndexingLinks = false,
                     treeItems = emptyList(),
                     selectedPage = null,
                     error = t.message ?: "Failed to read vault"
                 )
             }
+        }
+    }
+
+    private fun buildBacklinkIndex(files: List<MdFile>) {
+        if (files.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isIndexingLinks = true)
+            val backlinks = withContext(Dispatchers.IO) {
+                val pathLookup = files.associateBy { normalizePathKey(it.path) }
+                val titleLookup = files.groupBy { normalizePathKey(it.title) }
+
+                val backlinksMap = mutableMapOf<String, MutableSet<String>>()
+
+                files.forEach { source ->
+                    val targets = parseWikiTargets(readContent(source))
+                        .mapNotNull { target ->
+                            resolveTargetToPath(target, pathLookup, titleLookup)
+                        }
+                        .distinct()
+
+                    targets.forEach { targetPath ->
+                        backlinksMap.getOrPut(targetPath) { mutableSetOf() }.add(source.path)
+                    }
+                }
+
+                backlinksMap.mapValues { it.value.toList().sorted() }
+            }
+
+            backlinksByTargetPath = backlinks
+            val selected = _uiState.value.selectedPage
+            _uiState.value = _uiState.value.copy(
+                isIndexingLinks = false,
+                selectedPage = selected?.copy(backlinks = backlinks[selected.path].orEmpty())
+            )
         }
     }
 
@@ -170,23 +213,19 @@ class WikiViewModel @Inject constructor(
                     )
                     walk(child, fullPath, depth + 1)
                 } else if (child.isFile && childName.endsWith(".md", ignoreCase = true)) {
-                    val title = childName.removeSuffix(".md")
-                    val content = context.contentResolver.openInputStream(child.uri)
-                        ?.bufferedReader()
-                        ?.use { it.readText() }
-                        ?: ""
-                    val crumbs = fullPath.removeSuffix(".md").split('/').dropLast(1)
+                    val title = removeMdExtension(childName)
+                    val logicalPath = removeMdExtension(fullPath)
+                    val crumbs = logicalPath.split('/').dropLast(1)
                     treeItems += WikiTreeItem(
                         name = childName,
-                        path = fullPath.removeSuffix(".md"),
+                        path = logicalPath,
                         depth = depth,
                         isDirectory = false
                     )
                     files += MdFile(
                         title = title,
-                        path = fullPath.removeSuffix(".md"),
+                        path = logicalPath,
                         uri = child.uri,
-                        content = content,
                         breadcrumbs = crumbs
                     )
                 }
@@ -195,6 +234,16 @@ class WikiViewModel @Inject constructor(
 
         walk(root, "", 0)
         return treeItems to files.sortedBy { it.path.lowercase(Locale.US) }
+    }
+
+    private fun readContent(file: MdFile): String {
+        contentCache[file.path]?.let { return it }
+        val text = context.contentResolver.openInputStream(file.uri)
+            ?.bufferedReader()
+            ?.use { it.readText() }
+            ?: ""
+        contentCache[file.path] = text
+        return text
     }
 }
 
@@ -209,18 +258,31 @@ private fun parseWikiTargets(content: String): List<String> {
     }.toList()
 }
 
-private fun resolvesToPath(target: String, expectedPath: String, files: List<MdFile>): Boolean {
-    val normalizedTarget = target.removeSuffix(".md").lowercase(Locale.US)
-    val expected = expectedPath.lowercase(Locale.US)
+private fun resolveTargetToPath(
+    target: String,
+    pathLookup: Map<String, MdFile>,
+    titleLookup: Map<String, List<MdFile>>
+): String? {
+    val normalizedTarget = normalizePathKey(target)
+    val directPath = pathLookup[normalizedTarget]
+    if (directPath != null) return directPath.path
 
-    if (normalizedTarget == expected) return true
+    val byTitle = titleLookup[normalizedTarget]
+    if (!byTitle.isNullOrEmpty()) return byTitle.first().path
 
-    val expectedTitle = expectedPath.substringAfterLast('/').lowercase(Locale.US)
-    if (normalizedTarget == expectedTitle) return true
+    return null
+}
 
-    val pathMatch = files.firstOrNull { it.path.lowercase(Locale.US) == normalizedTarget }
-    if (pathMatch != null && pathMatch.path.lowercase(Locale.US) == expected) return true
+private fun normalizePathKey(value: String): String =
+    removeMdExtension(value)
+        .replace('\\', '/')
+        .trim('/')
+        .lowercase(Locale.US)
 
-    val titleMatch = files.firstOrNull { it.title.lowercase(Locale.US) == normalizedTarget }
-    return titleMatch?.path?.lowercase(Locale.US) == expected
+private fun removeMdExtension(value: String): String {
+    return if (value.lowercase(Locale.US).endsWith(".md")) {
+        value.dropLast(3)
+    } else {
+        value
+    }
 }

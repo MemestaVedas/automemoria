@@ -105,6 +105,33 @@ fun HomeScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .clickable { navController.navigate(Screen.Wiki.route) },
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Open Wiki Vault", fontWeight = FontWeight.Bold)
+                        Text(
+                            "Select your markdown folder and browse pages",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                        )
+                    }
+                    Icon(Icons.Default.FolderOpen, contentDescription = "Open wiki vault")
+                }
+            }
+
             // ── Today's Habits ──────────────────────────────────────────────
             SectionHeader(title = "Today's Habits", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
