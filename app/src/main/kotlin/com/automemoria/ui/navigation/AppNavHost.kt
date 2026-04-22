@@ -25,6 +25,7 @@ import com.automemoria.ui.kanban.BoardListScreen
 import com.automemoria.ui.kanban.BoardDetailScreen
 import com.automemoria.ui.notes.NoteListScreen
 import com.automemoria.ui.notes.NoteEditorScreen
+import com.automemoria.ui.graph.GraphScreen
 import com.automemoria.ui.settings.SettingsScreen
 
 // ─── Route definitions ────────────────────────────────────────────────────────
@@ -65,6 +66,7 @@ sealed class Screen(val route: String) {
     }
     object Settings     : Screen("settings")
     object Setup        : Screen("setup")
+    object Graph        : Screen("graph")
 }
 
 // ─── Bottom nav items ─────────────────────────────────────────────────────────
@@ -94,7 +96,10 @@ fun AppNavHost() {
 
     val showBottomBar = bottomNavItems.any { it.screen.route == currentDestination?.route }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
@@ -124,10 +129,10 @@ fun AppNavHost() {
             navController    = navController,
             startDestination = Screen.Home.route,
             modifier         = Modifier.padding(innerPadding),
-            enterTransition  = { fadeIn() + slideInHorizontally { it / 4 } },
-            exitTransition   = { fadeOut() + slideOutHorizontally { -it / 4 } },
-            popEnterTransition  = { fadeIn() + slideInHorizontally { -it / 4 } },
-            popExitTransition   = { fadeOut() + slideOutHorizontally { it / 4 } }
+            enterTransition  = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) + fadeIn() },
+            exitTransition   = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut() },
+            popEnterTransition  = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) + fadeIn() },
+            popExitTransition   = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) + fadeOut() }
         ) {
             composable(Screen.Home.route)     { HomeScreen(navController) }
             composable(Screen.Habits.route)   { HabitListScreen(navController) }
@@ -146,21 +151,8 @@ fun AppNavHost() {
             composable(Screen.HabitEditor.route)  { HabitEditorScreen(navController = navController) }
             composable(Screen.NoteList.route)     { NoteListScreen(navController) }
             composable(Screen.NoteEditor.route)   { NoteEditorScreen(navController = navController) }
+            composable(Screen.Graph.route)        { GraphScreen(navController = navController) }
             composable(Screen.Settings.route)     { SettingsScreen(navController) }
         }
-    }
-}
-
-// Temporary placeholder composables for screens not yet built
-@Composable private fun GoalsPlaceholderScreen() = PlaceholderScreen("Goals — Coming in Phase 2")
-@Composable private fun NoteEditorPlaceholder(nav: NavHostController) = PlaceholderScreen("Note Editor")
-
-@Composable
-private fun PlaceholderScreen(title: String) {
-    androidx.compose.foundation.layout.Box(
-        modifier = Modifier.then(Modifier),
-        contentAlignment = androidx.compose.ui.Alignment.Center
-    ) {
-        Text(title, style = MaterialTheme.typography.headlineMedium)
     }
 }

@@ -96,6 +96,8 @@ class NoteRepository @Inject constructor(
         }
     }
 
+    fun observeAllLinks() = linkDao.observeAll()
+
     suspend fun update(note: Note) {
         val entity = note.toEntity().copy(
             syncStatus = SyncStatus.PENDING_UPLOAD,
