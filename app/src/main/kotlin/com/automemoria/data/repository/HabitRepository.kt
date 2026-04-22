@@ -7,6 +7,7 @@ import com.automemoria.data.local.entity.HabitLogEntity
 import com.automemoria.data.remote.dto.HabitDto
 import com.automemoria.data.remote.dto.HabitLogDto
 import com.automemoria.domain.model.*
+import com.automemoria.notifications.HabitReminderScheduler
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,8 @@ import javax.inject.Singleton
 class HabitRepository @Inject constructor(
     private val habitDao: HabitDao,
     private val habitLogDao: HabitLogDao,
-    private val supabase: SupabaseClient
+    private val supabase: SupabaseClient,
+    private val reminderScheduler: HabitReminderScheduler
 ) {
     // ── Observe (Room → UI) ───────────────────────────────────────────────────
 
@@ -75,6 +77,7 @@ class HabitRepository @Inject constructor(
             syncStatus = SyncStatus.PENDING_UPLOAD
         )
         habitDao.upsert(entity)
+        reminderScheduler.scheduleDaily(habitId = entity.id, habitName = entity.name)
         return entity.toDomain()
     }
 
@@ -101,6 +104,7 @@ class HabitRepository @Inject constructor(
             syncStatus = SyncStatus.PENDING_UPLOAD
         )
         habitDao.upsert(updated)
+        reminderScheduler.scheduleDaily(habitId = updated.id, habitName = updated.name)
         return updated.toDomain()
     }
 
@@ -140,9 +144,11 @@ class HabitRepository @Inject constructor(
                 syncStatus = SyncStatus.PENDING_UPLOAD
             )
         )
+        reminderScheduler.cancel(habitId)
     }
 
     suspend fun deleteHabit(habitId: String) {
+        reminderScheduler.cancel(habitId)
         habitDao.softDelete(habitId, LocalDateTime.now().toIsoString())
     }
 

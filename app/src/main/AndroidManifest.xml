@@ -52,6 +52,11 @@
                 android:resource="@xml/interaction_service" />
         </service>
 
+        <receiver
+            android:name=".notifications.HabitReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
         <!-- WorkManager initializer (Hilt-aware) -->
         <provider
             android:name="androidx.startup.InitializationProvider"
