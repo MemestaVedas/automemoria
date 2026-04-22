@@ -12,6 +12,9 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE deletedAt IS NULL ORDER BY createdAt ASC")
     fun observeAll(): Flow<List<HabitEntity>>
 
+    @Query("SELECT * FROM habits WHERE id = :id")
+    fun observeById(id: String): Flow<HabitEntity?>
+
     @Query("SELECT * FROM habits WHERE deletedAt IS NULL AND isArchived = 0 ORDER BY createdAt ASC")
     fun observeActive(): Flow<List<HabitEntity>>
 

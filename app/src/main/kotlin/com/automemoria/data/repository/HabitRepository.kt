@@ -27,6 +27,12 @@ class HabitRepository @Inject constructor(
 ) {
     // ── Observe (Room → UI) ───────────────────────────────────────────────────
 
+    fun observeAllHabits(): Flow<List<Habit>> =
+        habitDao.observeAll().map { entities -> entities.map { it.toDomain() } }
+
+    fun observeHabitById(habitId: String): Flow<Habit?> =
+        habitDao.observeById(habitId).map { it?.toDomain() }
+
     fun observeActiveHabits(): Flow<List<Habit>> =
         habitDao.observeActive().map { entities -> entities.map { it.toDomain() } }
 
