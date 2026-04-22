@@ -277,6 +277,9 @@ interface NoteDao {
 
 @Dao
 interface NoteLinkDao {
+    @Query("SELECT * FROM note_links")
+    fun observeAll(): Flow<List<NoteLinkEntity>>
+
     @Query("SELECT * FROM note_links WHERE sourceNoteId = :noteId")
     fun observeOutgoing(noteId: String): Flow<List<NoteLinkEntity>>
 

@@ -11,6 +11,7 @@ import com.automemoria.notifications.HabitReminderScheduler
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.time.LocalDate
@@ -24,6 +25,7 @@ import javax.inject.Singleton
 class HabitRepository @Inject constructor(
     private val habitDao: HabitDao,
     private val habitLogDao: HabitLogDao,
+    private val goalDao: com.automemoria.data.local.dao.GoalDao,
     private val supabase: SupabaseClient,
     private val reminderScheduler: HabitReminderScheduler
 ) {

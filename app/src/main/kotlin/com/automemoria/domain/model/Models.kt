@@ -72,6 +72,7 @@ data class GoalMilestone(
     val dueDate: LocalDate?,
     val completedAt: LocalDateTime?,
     val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime,
     val syncStatus: SyncStatus
 )
 

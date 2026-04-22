@@ -3,6 +3,7 @@ package com.automemoria.data.repository
 import com.automemoria.data.local.dao.GoalDao
 import com.automemoria.data.local.dao.GoalMilestoneDao
 import com.automemoria.data.local.entity.GoalEntity
+import com.automemoria.data.local.entity.GoalMilestoneEntity
 import com.automemoria.data.remote.dto.GoalDto
 import com.automemoria.data.remote.dto.GoalMilestoneDto
 import com.automemoria.domain.model.*
@@ -58,7 +59,7 @@ class GoalRepository @Inject constructor(
         goalDao.upsert(
             goal.copy(
                 progress = newProgress,
-                status = if (newProgress == 100) GoalStatus.COMPLETED.name else goal.status,
+                status = if (newProgress == 100) GoalStatus.COMPLETED else goal.status,
                 syncStatus = SyncStatus.PENDING_UPLOAD,
                 updatedAt = LocalDateTime.now().toIsoString()
             )
@@ -89,7 +90,7 @@ class GoalRepository @Inject constructor(
             description = description,
             icon = icon,
             color = color,
-            status = status.name,
+            status = status,
             progress = existing?.progress ?: 0,
             targetDate = targetDate?.format(DateTimeFormatter.ISO_LOCAL_DATE),
             parentId = null,
@@ -113,7 +114,8 @@ class GoalRepository @Inject constructor(
             dueDate = null,
             completedAt = null,
             syncStatus = SyncStatus.PENDING_UPLOAD,
-            createdAt = now.toIsoString()
+            createdAt = now.toIsoString(),
+            updatedAt = now.toIsoString()
         )
         milestoneDao.upsert(entity)
         updateGoalProgress(goalId)
@@ -351,6 +353,53 @@ fun GoalEntity.toDto(): GoalDto = GoalDto(
     createdAt = createdAt,
     updatedAt = updatedAt,
     deletedAt = deletedAt
+)
+
+fun GoalMilestoneEntity.toDomain(): GoalMilestone = GoalMilestone(
+    id = id,
+    goalId = goalId,
+    title = title,
+    isCompleted = isCompleted,
+    dueDate = dueDate?.let { LocalDate.parse(it) },
+    completedAt = completedAt?.let { LocalDateTime.parse(it) },
+    createdAt = LocalDateTime.parse(createdAt),
+    updatedAt = LocalDateTime.parse(updatedAt),
+    syncStatus = syncStatus
+)
+
+fun GoalMilestoneDto.toEntity(): GoalMilestoneEntity = GoalMilestoneEntity(
+    id = id,
+    goalId = goalId,
+    title = title,
+    isCompleted = isCompleted,
+    dueDate = dueDate,
+    completedAt = completedAt,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    syncStatus = SyncStatus.SYNCED
+)
+
+fun GoalMilestoneEntity.toDto(): GoalMilestoneDto = GoalMilestoneDto(
+    id = id,
+    goalId = goalId,
+    title = title,
+    isCompleted = isCompleted,
+    dueDate = dueDate,
+    completedAt = completedAt,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun GoalMilestone.toEntity(): GoalMilestoneEntity = GoalMilestoneEntity(
+    id = id,
+    goalId = goalId,
+    title = title,
+    isCompleted = isCompleted,
+    dueDate = dueDate?.toString(),
+    completedAt = completedAt?.toString(),
+    createdAt = formatDateTime(createdAt),
+    updatedAt = formatDateTime(updatedAt),
+    syncStatus = SyncStatus.SYNCED
 )
 
 private fun formatDateTime(dateTime: LocalDateTime): String =

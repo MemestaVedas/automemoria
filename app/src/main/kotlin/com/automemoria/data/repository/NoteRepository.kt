@@ -3,6 +3,7 @@ package com.automemoria.data.repository
 import com.automemoria.data.local.dao.NoteDao
 import com.automemoria.data.local.dao.NoteLinkDao
 import com.automemoria.data.local.entity.NoteEntity
+import com.automemoria.data.local.entity.NoteLinkEntity
 import com.automemoria.data.remote.dto.NoteDto
 import com.automemoria.domain.model.Note
 import com.automemoria.domain.model.SyncStatus

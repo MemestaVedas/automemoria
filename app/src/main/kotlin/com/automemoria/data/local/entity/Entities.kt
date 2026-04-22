@@ -69,6 +69,7 @@ data class GoalEntity(
 
 @Entity(
     tableName = "goal_milestones",
+    indices = [Index("goalId")],
     foreignKeys = [ForeignKey(
         entity = GoalEntity::class,
         parentColumns = ["id"],
@@ -124,6 +125,7 @@ data class BoardEntity(
 
 @Entity(
     tableName = "board_columns",
+    indices = [Index("boardId")],
     foreignKeys = [ForeignKey(
         entity = BoardEntity::class,
         parentColumns = ["id"],
@@ -144,6 +146,7 @@ data class BoardColumnEntity(
 
 @Entity(
     tableName = "cards",
+    indices = [Index("columnId")],
     foreignKeys = [ForeignKey(
         entity = BoardColumnEntity::class,
         parentColumns = ["id"],
@@ -191,5 +194,7 @@ data class NoteLinkEntity(
     @PrimaryKey val id: String,
     val sourceNoteId: String,
     val targetNoteId: String,
+    val linkType: String,
+    val syncStatus: SyncStatus,
     val createdAt: String
 )
