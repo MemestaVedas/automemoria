@@ -15,10 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.automemoria.ui.navigation.Screen
 import com.automemoria.ui.theme.AppColors
 import java.time.LocalDate
 import java.time.YearMonth
@@ -26,9 +30,13 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarScreen(navController: NavController) {
+fun CalendarScreen(
+    navController: NavController,
+    viewModel: CalendarViewModel = hiltViewModel()
+) {
     var displayMonth by remember { mutableStateOf(YearMonth.now()) }
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -41,7 +49,7 @@ fun CalendarScreen(navController: NavController) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: open event creator */ },
+                onClick = { navController.navigate(Screen.EventEditor.createRoute()) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "New event")
@@ -94,7 +102,7 @@ fun CalendarScreen(navController: NavController) {
                 yearMonth = displayMonth,
                 selectedDate = selectedDate,
                 today = LocalDate.now(),
-                onDateSelected = { selectedDate = it },
+                onDateSelected = { viewModel.setSelectedDate(it) },
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
 
@@ -108,18 +116,61 @@ fun CalendarScreen(navController: NavController) {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
 
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    Text(
-                        "No events for this day",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+            if (uiState.isLoading) {
+                Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-                // TODO: populate from CalendarRepository in Phase 3
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (uiState.events.isEmpty()) {
+                        item {
+                            Text(
+                                "No events for this day",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    } else {
+                        items(uiState.events) { event ->
+                            EventItem(event = event)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EventItem(event: com.automemoria.domain.model.CalendarEvent) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val color = event.color?.let { try { Color(android.graphics.Color.parseColor(it)) } catch(e:Exception) { null } } ?: MaterialTheme.colorScheme.primary
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(event.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "${event.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))} ${event.location?.let { "• $it" } ?: ""}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
