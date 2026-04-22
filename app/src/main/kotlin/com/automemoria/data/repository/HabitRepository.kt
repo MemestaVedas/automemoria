@@ -70,6 +70,32 @@ class HabitRepository @Inject constructor(
         return entity.toDomain()
     }
 
+    suspend fun updateHabit(
+        habitId: String,
+        name: String,
+        description: String? = null,
+        icon: String? = null,
+        color: String? = null,
+        frequency: HabitFrequency = HabitFrequency.DAILY,
+        frequencyDays: List<Int> = emptyList(),
+        targetStreak: Int = 0
+    ): Habit? {
+        val existing = habitDao.getById(habitId) ?: return null
+        val updated = existing.copy(
+            name = name,
+            description = description,
+            icon = icon,
+            color = color,
+            frequency = frequency,
+            frequencyDays = frequencyDays.joinToString(",", "[", "]"),
+            targetStreak = targetStreak,
+            updatedAt = LocalDateTime.now().toIsoString(),
+            syncStatus = SyncStatus.PENDING_UPLOAD
+        )
+        habitDao.upsert(updated)
+        return updated.toDomain()
+    }
+
     suspend fun toggleHabitCompletion(habitId: String, date: LocalDate = LocalDate.now()) {
         val dateStr = date.toString()
         val existing = habitLogDao.getForDate(habitId, dateStr)

@@ -13,6 +13,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.automemoria.ui.habits.HabitDetailScreen
+import com.automemoria.ui.habits.HabitEditorScreen
 import com.automemoria.ui.habits.HabitListScreen
 import com.automemoria.ui.home.HomeScreen
 import com.automemoria.ui.calendar.CalendarScreen
@@ -126,7 +127,7 @@ fun AppNavHost() {
                 val habitId = backStackEntry.arguments?.getString("habitId").orEmpty()
                 HabitDetailScreen(navController = navController, habitId = habitId)
             }
-            composable(Screen.HabitEditor.route)  { HabitEditorPlaceholder(navController) }
+            composable(Screen.HabitEditor.route)  { HabitEditorScreen(navController = navController) }
             composable(Screen.NoteList.route)     { NoteListScreen(navController) }
             composable(Screen.NoteEditor.route)   { NoteEditorPlaceholder(navController) }
             composable(Screen.Settings.route)     { SettingsScreen(navController) }
@@ -136,7 +137,6 @@ fun AppNavHost() {
 
 // Temporary placeholder composables for screens not yet built
 @Composable private fun GoalsPlaceholderScreen() = PlaceholderScreen("Goals — Coming in Phase 2")
-@Composable private fun HabitEditorPlaceholder(nav: NavHostController) = PlaceholderScreen("Habit Editor")
 @Composable private fun NoteEditorPlaceholder(nav: NavHostController) = PlaceholderScreen("Note Editor")
 
 @Composable
