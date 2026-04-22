@@ -20,9 +20,11 @@ import com.automemoria.ui.habits.HabitEditorScreen
 import com.automemoria.ui.habits.HabitListScreen
 import com.automemoria.ui.home.HomeScreen
 import com.automemoria.ui.calendar.CalendarScreen
+import com.automemoria.ui.calendar.EventEditorScreen
 import com.automemoria.ui.kanban.BoardListScreen
 import com.automemoria.ui.kanban.BoardDetailScreen
 import com.automemoria.ui.notes.NoteListScreen
+import com.automemoria.ui.notes.NoteEditorScreen
 import com.automemoria.ui.settings.SettingsScreen
 
 // ─── Route definitions ────────────────────────────────────────────────────────
@@ -50,6 +52,9 @@ sealed class Screen(val route: String) {
     }
     object BoardDetail  : Screen("board/{boardId}") {
         fun createRoute(id: String) = "board/$id"
+    }
+    object EventEditor  : Screen("event_editor?id={id}") {
+        fun createRoute(id: String? = null) = if (id != null) "event_editor?id=$id" else "event_editor"
     }
     object NoteList     : Screen("notes")
     object NoteEditor   : Screen("note_editor?id={id}") {
@@ -128,6 +133,7 @@ fun AppNavHost() {
             composable(Screen.Habits.route)   { HabitListScreen(navController) }
             composable(Screen.Goals.route)    { GoalListScreen(navController) }
             composable(Screen.Calendar.route) { CalendarScreen(navController) }
+            composable(Screen.EventEditor.route) { EventEditorScreen(navController = navController) }
             composable(Screen.Boards.route)   { BoardListScreen(navController) }
             composable(Screen.BoardDetail.route) { BoardDetailScreen(navController = navController) }
 
@@ -139,7 +145,7 @@ fun AppNavHost() {
             composable(Screen.GoalEditor.route) { GoalEditorScreen(navController = navController) }
             composable(Screen.HabitEditor.route)  { HabitEditorScreen(navController = navController) }
             composable(Screen.NoteList.route)     { NoteListScreen(navController) }
-            composable(Screen.NoteEditor.route)   { NoteEditorPlaceholder(navController) }
+            composable(Screen.NoteEditor.route)   { NoteEditorScreen(navController = navController) }
             composable(Screen.Settings.route)     { SettingsScreen(navController) }
         }
     }

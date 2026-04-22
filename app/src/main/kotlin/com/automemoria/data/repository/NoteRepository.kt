@@ -40,29 +40,60 @@ class NoteRepository @Inject constructor(
             emptyList()
         }
 
-    suspend fun create(
+    suspend fun save(
+        id: String? = null,
         title: String,
-        content: String = "",
+        content: String,
         tags: List<String> = emptyList(),
-        linkedGoalId: String? = null,
-        linkedCardId: String? = null
+        isPinned: Boolean = false
     ): Note {
         val now = LocalDateTime.now()
+        val noteId = id ?: UUID.randomUUID().toString()
+        val existing = if (id != null) noteDao.getById(id) else null
+        
         val entity = NoteEntity(
-            id = UUID.randomUUID().toString(),
+            id = noteId,
             title = title,
             content = content,
             tags = tags.joinToString(",", "[", "]"),
-            isPinned = false,
-            linkedGoalId = linkedGoalId,
-            linkedCardId = linkedCardId,
+            isPinned = isPinned,
+            linkedGoalId = existing?.linkedGoalId,
+            linkedCardId = existing?.linkedCardId,
             syncStatus = SyncStatus.PENDING_UPLOAD,
-            createdAt = now.toIsoString(),
+            createdAt = existing?.createdAt ?: now.toIsoString(),
             updatedAt = now.toIsoString(),
             deletedAt = null
         )
         noteDao.upsert(entity)
+        
+        // Parse wikilinks: [[Target Note Title]]
+        parseAndCreateLinks(noteId, content)
+        
         return entity.toDomain()
+    }
+
+    private suspend fun parseAndCreateLinks(sourceId: String, content: String) {
+        val pattern = "\\[\\[(.*?)\\]\\]".toRegex()
+        val matches = pattern.findAll(content)
+        
+        // Remove old links from this note
+        // linkDao.deleteBySource(sourceId)
+        
+        matches.forEach { match ->
+            val targetTitle = match.groupValues[1]
+            val targetNote = noteDao.getByTitle(targetTitle)
+            if (targetNote != null) {
+                val link = NoteLinkEntity(
+                    id = UUID.randomUUID().toString(),
+                    sourceNoteId = sourceId,
+                    targetNoteId = targetNote.id,
+                    linkType = "WIKILINK",
+                    syncStatus = SyncStatus.PENDING_UPLOAD,
+                    createdAt = LocalDateTime.now().toIsoString()
+                )
+                linkDao.upsert(link)
+            }
+        }
     }
 
     suspend fun update(note: Note) {
