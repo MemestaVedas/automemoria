@@ -1,134 +1,84 @@
-# Automemoria — Android App
+# Automemoria
 
-> Your personal Notion + Obsidian + habit tracker. Offline-first, Supabase-synced, summonable via long-press power button.
-
----
-
-## Quick Start
-
-### 1. Clone & open in Android Studio
-
-```bash
-git clone <your-repo-url>
-cd automemoria
-```
-
-Open the project in **Android Studio Ladybug (2024.2.1)** or newer.
+*"I will run as fast as I can to wherever my customer desires. I am the Auto Memory Doll, Automemoria."*
 
 ---
 
-### 2. Configure Supabase credentials
+Automemoria is not a tool of utility, but a vessel for the ephemeral. It is the quiet room where the echoes of your intentions are transcribed into permanence. It exists to capture the fragments of thought, the steady rhythm of your days, and the far-reaching silhouettes of your aspirations.
 
-Copy the template:
-```bash
-cp local.properties.template local.properties
-```
-
-Edit `local.properties` and fill in your values:
-```
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
-```
-
-> ⚠️ `local.properties` is gitignored. Never commit credentials.
+In a world of fleeting moments, we provide the ink.
 
 ---
 
-### 3. Set up Supabase
+### The Services of the Doll
 
-1. Go to [supabase.com](https://supabase.com) and open your project
-2. Navigate to **SQL Editor**
-3. Paste the entire contents of `supabase_schema.sql` and run it
-4. Go to **Authentication → Users** and create your user account manually
-5. Copy your **Project URL** and **anon public key** from **Settings → API**
+#### **I. Transcribing the Heart (Notes)**
+Beyond mere records, these are the letters you write to your future self. Linked by the invisible threads of a knowledge graph, every thought finds its place in the grand tapestry of your mind.
+*Wikilinks, Backlinks, and the Circular Knowledge Graph.*
+
+#### **II. The Steady Rhythm (Habits)**
+Character is formed in the quiet repetition of the everyday. We track the frequency of your soul's pulse, ensuring that no streak is broken and no effort is forgotten.
+*Reactive progress and linked synchronization.*
+
+#### **III. The Arrangement of Fate (Kanban)**
+To move forward is to organize the chaos. Your ambitions are laid out upon boards of order, moving from the realm of 'concept' to the reality of 'done.'
+*Dynamic boards, columns, and prioritized cards.*
+
+#### **IV. The Horizon (Goals)**
+Every doll must have a destination. We map the milestones of your journey, calculating the distance remaining between who you are and who you wish to become.
+*Linked habits and reactive goal progress.*
 
 ---
 
-### 4. Build and run
+### The Mechanism
 
-In Android Studio:
-- Select your device or emulator (API 26+ required)
-- Click **Run ▶️**
+To breathe life into the Doll, one must first align the gears.
 
-Or via terminal:
-```bash
-./gradlew installDebug
+#### **1. The Digital Foundation**
+The Doll requires a central archive. Configure your Supabase credentials within `local.properties`:
+```properties
+SUPABASE_URL=https://your-silent-archive.supabase.co
+SUPABASE_ANON_KEY=your-secret-cipher-key
 ```
 
----
+#### **2. The Soul's Schema**
+Initialize the memory banks by executing the `supabase_schema.sql` within your SQL Editor. This prepares the Doll to receive the weight of your words.
 
-### 5. Set as Default Digital Assistant (power button summon)
-
-On your Android device:
-1. Go to **Settings → Apps → Default Apps → Digital Assistant**
-2. Select **Automemoria**
-3. Long-press the power button (or home button on some devices) — the Quick Capture overlay will appear
+#### **3. The Summoning**
+Automemoria can be called upon at any moment. Set the app as your **Default Digital Assistant** to evoke the Quick Capture overlay with a simple long-press of the power button.
 
 ---
 
-## Project Structure
+### The Tapestry
 
 ```
-app/src/main/kotlin/moe/memesta/automemoria/
-├── assist/          # Assist API (power button summon + Quick Capture overlay)
+app/src/main/kotlin/com/automemoria/
+├── assist/          # The Summoning API
 ├── data/
-│   ├── local/       # Room database, entities, DAOs
-│   ├── remote/      # Supabase client, DTOs
-│   └── repository/  # Data layer — Room-first, Supabase-second
-├── domain/model/    # Pure Kotlin domain models
-├── sync/            # SyncWorker, SyncPreferences, NetworkObserver
+│   ├── local/       # The Deep Archive (Room)
+│   ├── remote/      # The Silent Echo (Supabase)
+│   └── repository/  # The Bridge of Memory
+├── domain/model/    # Pure Intentions
 ├── ui/
-│   ├── home/        # Dashboard screen
-│   ├── habits/      # Habit list + create sheet
-│   ├── goals/       # Goals (Phase 2)
-│   ├── calendar/    # Calendar month view
-│   ├── kanban/      # Board list (Phase 4)
-│   ├── notes/       # Notes list (Phase 5)
-│   ├── navigation/  # AppNavHost + Screen routes
-│   └── theme/       # Material3 dark-first theme
-├── di/              # Hilt modules
-├── MainActivity.kt
+│   ├── home/        # The Dashboard of the Soul
+│   ├── graph/       # The Knowledge Web
+│   └── theme/       # A Dark-First Aesthetic
 └── AutomemoriaApp.kt
 ```
 
 ---
 
-## Build Phases
+### Technical Specifications
 
-| Phase | Feature | Status |
-|-------|---------|--------|
-| 0 | Project setup, Room, Supabase auth, SyncWorker skeleton | ✅ Scaffold done |
-| 1 | Habits — streaks, heatmap, full sync | 🔜 Next |
-| 2 | Goals — milestones, progress tracking | ⬜ |
-| 3 | Calendar — month view, events, recurrence | ⬜ |
-| 4 | Kanban — boards, drag-and-drop cards | ⬜ |
-| 5 | Notes — markdown editor, wikilinks, backlinks | ⬜ |
-| 6 | Home dashboard — full assembly | ⬜ |
-| 7 | Assist API — full Quick Capture with repos | ⬜ |
-| 8 | Sync engine — full pull/push/delete/conflict resolution | ⬜ |
-| 9 | Polish — animations, widgets, graph view | ⬜ |
-
----
-
-## Tech Stack
-
-| | Library |
+| Component | Library |
 |---|---|
-| Language | Kotlin 2.x |
-| UI | Jetpack Compose + Material3 |
-| DI | Hilt |
-| Local DB | Room (SQLite) |
-| Settings | DataStore Preferences |
-| Sync | WorkManager |
-| Cloud | Supabase (Postgres + Auth + Realtime) |
-| HTTP | Ktor Android |
-| Images | Coil |
-| Logging | Timber |
+| **Language** | Kotlin 2.x |
+| **Interface** | Jetpack Compose (Material 3 Expressive) |
+| **Logic** | Hilt & StateFlow |
+| **Storage** | Room & Supabase |
+| **Sync** | WorkManager |
 
 ---
 
-## Next steps after Phase 0
-
-1. Verify sync end-to-end: create a habit on device → check Supabase dashboard → confirm the row appears
-2. Move to Phase 1: implement `HabitDetailScreen`, streak calculation, and the heatmap component
-3. Add `GoalRepository` and `NoteRepository` following the same pattern as `HabitRepository`
+*"What is 'love'? I want to know what it means."* 
+Transcribe your journey. Find your meaning.
