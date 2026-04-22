@@ -5,6 +5,8 @@ import com.automemoria.data.local.entity.CalendarEventEntity
 import com.automemoria.data.remote.dto.CalendarEventDto
 import com.automemoria.domain.model.CalendarEvent
 import com.automemoria.domain.model.SyncStatus
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -16,7 +18,8 @@ import javax.inject.Singleton
 
 @Singleton
 class CalendarRepository @Inject constructor(
-    private val eventDao: CalendarEventDao
+    private val eventDao: CalendarEventDao,
+    private val supabase: io.github.jan.supabase.SupabaseClient
 ) {
     fun observeAll(): Flow<List<CalendarEvent>> =
         eventDao.observeAll().map { entities -> entities.map { it.toDomain() } }
@@ -73,6 +76,8 @@ class CalendarRepository @Inject constructor(
         eventDao.softDelete(id, LocalDateTime.now().toIsoString())
     }
 
+    // ── Sync operations ───────────────────────────────────────────────────────
+
     suspend fun pushPendingToSupabase() {
         val pending = eventDao.getPendingSync()
         if (pending.isEmpty()) return
@@ -82,7 +87,7 @@ class CalendarRepository @Inject constructor(
 
         if (toUpsert.isNotEmpty()) {
             try {
-                // TODO: supabase.from("calendar_events").upsert(toUpsert.map { it.toDto() })
+                supabase.from("calendar_events").upsert(toUpsert.map { it.toDto() })
                 toUpsert.forEach { eventDao.updateSyncStatus(it.id, SyncStatus.SYNCED) }
                 Timber.d("Synced ${toUpsert.size} events to Supabase")
             } catch (e: Exception) {
@@ -92,8 +97,12 @@ class CalendarRepository @Inject constructor(
 
         if (toDelete.isNotEmpty()) {
             try {
-                // TODO: delete from Supabase
-                toDelete.forEach { eventDao.hardDelete(it.id) }
+                toDelete.forEach { entity ->
+                    supabase.from("calendar_events").update({
+                        set("deleted_at", entity.deletedAt)
+                    }) { filter { eq("id", entity.id) } }
+                    eventDao.hardDelete(entity.id)
+                }
                 Timber.d("Deleted ${toDelete.size} events from Supabase")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to delete events from Supabase")
@@ -103,9 +112,17 @@ class CalendarRepository @Inject constructor(
 
     suspend fun pullFromSupabase(since: String) {
         try {
-            // TODO: val remote = supabase.from("calendar_events").select { filter { gte("updated_at", since) } }.decodeList<CalendarEventDto>()
-            // TODO: remote.forEach { dto -> eventDao.upsert(dto.toEntity()) }
-            Timber.d("Pulled events from Supabase")
+            val remote = supabase.from("calendar_events")
+                .select { filter { gte("updated_at", since) } }
+                .decodeList<CalendarEventDto>()
+
+            remote.forEach { dto ->
+                val local = eventDao.getById(dto.id)
+                if (local == null || dto.updatedAt > local.updatedAt) {
+                    eventDao.upsert(dto.toEntity())
+                }
+            }
+            Timber.d("Pulled ${remote.size} events from Supabase")
         } catch (e: Exception) {
             Timber.e(e, "Failed to pull events from Supabase")
         }

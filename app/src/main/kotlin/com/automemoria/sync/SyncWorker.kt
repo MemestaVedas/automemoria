@@ -3,7 +3,7 @@ package com.automemoria.sync
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
-import com.automemoria.data.repository.HabitRepository
+import com.automemoria.data.repository.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import timber.log.Timber
@@ -14,10 +14,10 @@ class SyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val habitRepository: HabitRepository,
-    // Inject other repositories here as they are built
-    // private val goalRepository: GoalRepository,
-    // private val noteRepository: NoteRepository,
-    // etc.
+    private val goalRepository: GoalRepository,
+    private val noteRepository: NoteRepository,
+    private val boardRepository: BoardRepository,
+    private val calendarRepository: CalendarRepository,
     private val syncPreferences: SyncPreferences
 ) : CoroutineWorker(appContext, workerParams) {
 
@@ -27,11 +27,19 @@ class SyncWorker @AssistedInject constructor(
         return try {
             val lastSync = syncPreferences.getLastSyncTimestamp()
 
-            // Pull remote changes into Room
+            // 1. Pull remote changes into Room
             habitRepository.pullFromSupabase(since = lastSync)
+            goalRepository.pullFromSupabase(since = lastSync)
+            noteRepository.pullFromSupabase(since = lastSync)
+            boardRepository.pullFromSupabase(since = lastSync)
+            calendarRepository.pullFromSupabase(since = lastSync)
 
-            // Push local pending changes to Supabase
+            // 2. Push local pending changes to Supabase
             habitRepository.pushPendingToSupabase()
+            goalRepository.pushPendingToSupabase()
+            noteRepository.pushPendingToSupabase()
+            boardRepository.pushPendingToSupabase()
+            calendarRepository.pushPendingToSupabase()
 
             // Update last sync timestamp
             syncPreferences.setLastSyncTimestamp(

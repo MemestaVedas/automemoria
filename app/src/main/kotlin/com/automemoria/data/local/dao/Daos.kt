@@ -114,6 +114,12 @@ interface GoalMilestoneDao {
     @Query("SELECT * FROM goal_milestones WHERE goalId = :goalId ORDER BY createdAt ASC")
     fun observeForGoal(goalId: String): Flow<List<GoalMilestoneEntity>>
 
+    @Query("SELECT * FROM goal_milestones WHERE id = :id")
+    suspend fun getById(id: String): GoalMilestoneEntity?
+
+    @Query("SELECT * FROM goal_milestones WHERE goalId = :goalId")
+    suspend fun getAllForGoal(goalId: String): List<GoalMilestoneEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(milestone: GoalMilestoneEntity)
 

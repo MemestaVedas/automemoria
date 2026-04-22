@@ -18,6 +18,9 @@ class AutomemoriaApp : Application(), Configuration.Provider {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
+
+        // Schedule periodic tasks
+        com.automemoria.notifications.StreakAtRiskWorker.schedule(this)
     }
 
     // Hilt-aware WorkManager configuration

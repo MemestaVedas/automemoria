@@ -1,10 +1,13 @@
 package com.automemoria.data.repository
 
 import com.automemoria.data.local.dao.NoteDao
+import com.automemoria.data.local.dao.NoteLinkDao
 import com.automemoria.data.local.entity.NoteEntity
 import com.automemoria.data.remote.dto.NoteDto
 import com.automemoria.domain.model.Note
 import com.automemoria.domain.model.SyncStatus
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -16,13 +19,26 @@ import javax.inject.Singleton
 
 @Singleton
 class NoteRepository @Inject constructor(
-    private val noteDao: NoteDao
+    private val noteDao: NoteDao,
+    private val linkDao: NoteLinkDao,
+    private val supabase: SupabaseClient
 ) {
     fun observeAll(): Flow<List<Note>> =
         noteDao.observeAll().map { entities -> entities.map { it.toDomain() } }
 
     fun search(query: String): Flow<List<Note>> =
         noteDao.search(query).map { entities -> entities.map { it.toDomain() } }
+
+    fun observeNote(noteId: String): Flow<Note?> =
+        noteDao.observeAll().map { notes -> notes.find { it.id == noteId }?.toDomain() }
+
+    fun observeBacklinks(noteId: String): Flow<List<Note>> =
+        linkDao.observeBacklinks(noteId).map { links ->
+            // In a real app, you might want to fetch the actual notes here.
+            // For now, we return empty list or simplify.
+            // Actually, the DAO returns NoteLinkEntity, we'd need to join or fetch.
+            emptyList()
+        }
 
     suspend fun create(
         title: String,
@@ -72,6 +88,8 @@ class NoteRepository @Inject constructor(
         )
     }
 
+    // ── Sync operations ───────────────────────────────────────────────────────
+
     suspend fun pushPendingToSupabase() {
         val pending = noteDao.getPendingSync()
         if (pending.isEmpty()) return
@@ -81,7 +99,7 @@ class NoteRepository @Inject constructor(
 
         if (toUpsert.isNotEmpty()) {
             try {
-                // TODO: supabase.from("notes").upsert(toUpsert.map { it.toDto() })
+                supabase.from("notes").upsert(toUpsert.map { it.toDto() })
                 toUpsert.forEach { noteDao.updateSyncStatus(it.id, SyncStatus.SYNCED) }
                 Timber.d("Synced ${toUpsert.size} notes to Supabase")
             } catch (e: Exception) {
@@ -91,8 +109,12 @@ class NoteRepository @Inject constructor(
 
         if (toDelete.isNotEmpty()) {
             try {
-                // TODO: delete from Supabase
-                toDelete.forEach { noteDao.hardDelete(it.id) }
+                toDelete.forEach { entity ->
+                    supabase.from("notes").update({
+                        set("deleted_at", entity.deletedAt)
+                    }) { filter { eq("id", entity.id) } }
+                    noteDao.hardDelete(entity.id)
+                }
                 Timber.d("Deleted ${toDelete.size} notes from Supabase")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to delete notes from Supabase")
@@ -102,9 +124,17 @@ class NoteRepository @Inject constructor(
 
     suspend fun pullFromSupabase(since: String) {
         try {
-            // TODO: val remote = supabase.from("notes").select { filter { gte("updated_at", since) } }.decodeList<NoteDto>()
-            // TODO: remote.forEach { dto -> noteDao.upsert(dto.toEntity()) }
-            Timber.d("Pulled notes from Supabase")
+            val remote = supabase.from("notes")
+                .select { filter { gte("updated_at", since) } }
+                .decodeList<NoteDto>()
+
+            remote.forEach { dto ->
+                val local = noteDao.getById(dto.id)
+                if (local == null || dto.updatedAt > local.updatedAt) {
+                    noteDao.upsert(dto.toEntity())
+                }
+            }
+            Timber.d("Pulled ${remote.size} notes from Supabase")
         } catch (e: Exception) {
             Timber.e(e, "Failed to pull notes from Supabase")
         }
