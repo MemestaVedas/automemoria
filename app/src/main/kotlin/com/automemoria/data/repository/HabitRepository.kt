@@ -39,6 +39,14 @@ class HabitRepository @Inject constructor(
     fun observeHabitLogs(habitId: String): Flow<List<HabitLog>> =
         habitLogDao.observeForHabit(habitId).map { entities -> entities.map { it.toDomain() } }
 
+    fun observeCompletedHabitIdsForDate(date: LocalDate): Flow<Set<String>> =
+        habitLogDao.observeAllForDate(date.toString())
+            .map { logs ->
+                logs.filter { it.completed }
+                    .map { it.habitId }
+                    .toSet()
+            }
+
     // ── Write (Room first, sync later) ────────────────────────────────────────
 
     suspend fun createHabit(

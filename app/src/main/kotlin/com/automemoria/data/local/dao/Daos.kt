@@ -47,6 +47,9 @@ interface HabitLogDao {
     @Query("SELECT * FROM habit_logs WHERE habitId = :habitId ORDER BY loggedDate DESC")
     fun observeForHabit(habitId: String): Flow<List<HabitLogEntity>>
 
+    @Query("SELECT * FROM habit_logs WHERE loggedDate = :date")
+    fun observeAllForDate(date: String): Flow<List<HabitLogEntity>>
+
     @Query("SELECT * FROM habit_logs WHERE habitId = :habitId AND loggedDate = :date LIMIT 1")
     suspend fun getForDate(habitId: String, date: String): HabitLogEntity?
 

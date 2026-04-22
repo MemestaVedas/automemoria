@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.automemoria.data.repository.HabitRepository
 import com.automemoria.domain.model.Habit
-import com.automemoria.domain.model.HabitLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -40,22 +39,16 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             habitRepository.observeActiveHabits()
                 .combine(
-                    // We need today's logs — observe them reactively
-                    // For simplicity in Phase 0 we derive from the habit logs flow per habit
-                    // This will be refined in Phase 1
-                    flowOf(emptyList<HabitLog>())
-                ) { habits, _ ->
-                    habits
-                }
-                .collect { habits ->
-                    // For each habit, check if completed today
-                    val today = LocalDate.now().toString()
-                    val withStatus = habits.map { habit ->
+                    habitRepository.observeCompletedHabitIdsForDate(LocalDate.now())
+                ) { habits, completedHabitIds ->
+                    habits.map { habit ->
                         HabitWithTodayStatus(
                             habit = habit,
-                            completedToday = false // refined in Phase 1 with per-habit log query
+                            completedToday = completedHabitIds.contains(habit.id)
                         )
                     }
+                }
+                .collect { withStatus ->
                     _uiState.update {
                         it.copy(todayHabits = withStatus, isLoading = false)
                     }
