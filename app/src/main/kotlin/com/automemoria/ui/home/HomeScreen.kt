@@ -135,17 +135,60 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Goals Placeholder ───────────────────────────────────────────
+            // ── Goals ───────────────────────────────────────────────────────
             SectionHeader(
                 title = "Active Goals",
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
-            EmptyState(
-                message = "No active goals",
-                actionLabel = "Create a goal",
-                onAction = { navController.navigate(Screen.Goals.route) },
-                modifier = Modifier.padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 16.dp)
+            
+            if (uiState.activeGoals.isEmpty()) {
+                EmptyState(
+                    message = "No active goals",
+                    actionLabel = "Create a goal",
+                    onAction = { navController.navigate(Screen.Goals.route) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    items(uiState.activeGoals) { goal ->
+                        HomeGoalCard(
+                            goal = goal,
+                            onClick = { navController.navigate(Screen.GoalDetail.createRoute(goal.id)) }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Recent Notes ────────────────────────────────────────────────
+            SectionHeader(
+                title = "Recent Notes",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
+            
+            if (uiState.recentNotes.isEmpty()) {
+                EmptyState(
+                    message = "No notes yet",
+                    actionLabel = "Start writing",
+                    onAction = { navController.navigate(Screen.NoteList.route) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            } else {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    uiState.recentNotes.forEach { note ->
+                        HomeNoteItem(
+                            note = note,
+                            onClick = { navController.navigate(Screen.NoteEditor.createRoute(note.id)) }
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+            }
 
             // ── Quick Actions ───────────────────────────────────────────────
             SectionHeader(
@@ -253,6 +296,51 @@ fun QuickActionCard(
             Icon(icon, contentDescription = label, modifier = Modifier.size(28.dp))
             Spacer(Modifier.height(6.dp))
             Text(label, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+fun HomeGoalCard(goal: com.automemoria.domain.model.Goal, onClick: () -> Unit) {
+    val color = goal.color?.let { parseColor(it) } ?: MaterialTheme.colorScheme.primary
+    
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(goal.icon ?: "🎯", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(8.dp))
+            Text(goal.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1)
+            Spacer(Modifier.height(4.dp))
+            LinearProgressIndicator(
+                progress = goal.progress / 100f,
+                modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
+                color = color,
+                trackColor = color.copy(alpha = 0.2f)
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeNoteItem(note: com.automemoria.domain.model.Note, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(12.dp))
+            Text(
+                if (note.title.isNotBlank()) note.title else note.content.take(30),
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1
+            )
         }
     }
 }

@@ -65,6 +65,9 @@ class GoalRepository @Inject constructor(
         )
     }
 
+    fun observeActiveGoals(): Flow<List<Goal>> =
+        goalDao.observeByStatus(GoalStatus.ACTIVE.name).map { entities -> entities.map { it.toDomain() } }
+
     suspend fun saveGoal(
         id: String? = null,
         title: String,
