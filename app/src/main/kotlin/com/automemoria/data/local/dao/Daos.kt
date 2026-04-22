@@ -148,6 +148,12 @@ interface CalendarEventDao {
     @Query("UPDATE calendar_events SET deletedAt = :deletedAt, syncStatus = 'PENDING_DELETE' WHERE id = :id")
     suspend fun softDelete(id: String, deletedAt: String)
 
+    @Query("DELETE FROM calendar_events WHERE id = :id")
+    suspend fun hardDelete(id: String)
+
+    @Query("UPDATE calendar_events SET syncStatus = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: SyncStatus)
+
     @Query("SELECT * FROM calendar_events WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<CalendarEventEntity>
 }
@@ -170,6 +176,12 @@ interface BoardDao {
 
     @Query("UPDATE boards SET deletedAt = :deletedAt, syncStatus = 'PENDING_DELETE' WHERE id = :id")
     suspend fun softDelete(id: String, deletedAt: String)
+
+    @Query("DELETE FROM boards WHERE id = :id")
+    suspend fun hardDelete(id: String)
+
+    @Query("UPDATE boards SET syncStatus = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: SyncStatus)
 
     @Query("SELECT * FROM boards WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<BoardEntity>
@@ -240,6 +252,12 @@ interface NoteDao {
 
     @Query("UPDATE notes SET deletedAt = :deletedAt, syncStatus = 'PENDING_DELETE' WHERE id = :id")
     suspend fun softDelete(id: String, deletedAt: String)
+
+    @Query("DELETE FROM notes WHERE id = :id")
+    suspend fun hardDelete(id: String)
+
+    @Query("UPDATE notes SET syncStatus = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: SyncStatus)
 
     @Query("SELECT * FROM notes WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<NoteEntity>
