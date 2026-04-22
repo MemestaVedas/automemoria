@@ -1,9 +1,9 @@
-package moe.memesta.automemoria.data.local
+package com.automemoria.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import moe.memesta.automemoria.data.local.dao.*
-import moe.memesta.automemoria.data.local.entity.*
+import com.automemoria.data.local.dao.*
+import com.automemoria.data.local.entity.*
 
 @Database(
     entities = [

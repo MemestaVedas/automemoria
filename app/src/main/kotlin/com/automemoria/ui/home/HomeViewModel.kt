@@ -1,10 +1,10 @@
-package moe.memesta.automemoria.ui.home
+package com.automemoria.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import moe.memesta.automemoria.data.repository.HabitRepository
-import moe.memesta.automemoria.domain.model.Habit
-import moe.memesta.automemoria.domain.model.HabitLog
+import com.automemoria.data.repository.HabitRepository
+import com.automemoria.domain.model.Habit
+import com.automemoria.domain.model.HabitLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

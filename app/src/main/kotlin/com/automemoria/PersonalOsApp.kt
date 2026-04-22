@@ -1,4 +1,4 @@
-package moe.memesta.automemoria
+package com.automemoria
 
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory

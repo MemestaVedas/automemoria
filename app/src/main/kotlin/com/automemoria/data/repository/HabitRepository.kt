@@ -1,12 +1,12 @@
-package moe.memesta.automemoria.data.repository
+package com.automemoria.data.repository
 
-import moe.memesta.automemoria.data.local.dao.HabitDao
-import moe.memesta.automemoria.data.local.dao.HabitLogDao
-import moe.memesta.automemoria.data.local.entity.HabitEntity
-import moe.memesta.automemoria.data.local.entity.HabitLogEntity
-import moe.memesta.automemoria.data.remote.dto.HabitDto
-import moe.memesta.automemoria.data.remote.dto.HabitLogDto
-import moe.memesta.automemoria.domain.model.*
+import com.automemoria.data.local.dao.HabitDao
+import com.automemoria.data.local.dao.HabitLogDao
+import com.automemoria.data.local.entity.HabitEntity
+import com.automemoria.data.local.entity.HabitLogEntity
+import com.automemoria.data.remote.dto.HabitDto
+import com.automemoria.data.remote.dto.HabitLogDto
+import com.automemoria.domain.model.*
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow

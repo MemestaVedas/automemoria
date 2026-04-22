@@ -1,8 +1,8 @@
-package moe.memesta.automemoria.data.local.dao
+package com.automemoria.data.local.dao
 
 import androidx.room.*
-import moe.memesta.automemoria.data.local.entity.*
-import moe.memesta.automemoria.domain.model.SyncStatus
+import com.automemoria.data.local.entity.*
+import com.automemoria.domain.model.SyncStatus
 import kotlinx.coroutines.flow.Flow
 
 // ─── Habit DAO ────────────────────────────────────────────────────────────────

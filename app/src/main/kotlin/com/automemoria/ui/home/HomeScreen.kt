@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.ui.home
+package com.automemoria.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import moe.memesta.automemoria.ui.navigation.Screen
-import moe.memesta.automemoria.ui.theme.AppColors
+import com.automemoria.ui.navigation.Screen
+import com.automemoria.ui.theme.AppColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 

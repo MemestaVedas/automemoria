@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.assist
+package com.automemoria.assist
 
 import android.content.Intent
 import android.os.Bundle

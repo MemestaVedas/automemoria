@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.ui.navigation
+package com.automemoria.ui.navigation
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.padding
@@ -12,12 +12,12 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
-import moe.memesta.automemoria.ui.habits.HabitListScreen
-import moe.memesta.automemoria.ui.home.HomeScreen
-import moe.memesta.automemoria.ui.calendar.CalendarScreen
-import moe.memesta.automemoria.ui.kanban.BoardListScreen
-import moe.memesta.automemoria.ui.notes.NoteListScreen
-import moe.memesta.automemoria.ui.settings.SettingsScreen
+import com.automemoria.ui.habits.HabitListScreen
+import com.automemoria.ui.home.HomeScreen
+import com.automemoria.ui.calendar.CalendarScreen
+import com.automemoria.ui.kanban.BoardListScreen
+import com.automemoria.ui.notes.NoteListScreen
+import com.automemoria.ui.settings.SettingsScreen
 
 // ─── Route definitions ────────────────────────────────────────────────────────
 

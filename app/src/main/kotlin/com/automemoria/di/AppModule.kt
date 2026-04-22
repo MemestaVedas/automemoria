@@ -1,10 +1,10 @@
-package moe.memesta.automemoria.di
+package com.automemoria.di
 
 import android.content.Context
 import androidx.room.Room
-import moe.memesta.automemoria.data.local.AppDatabase
-import moe.memesta.automemoria.data.local.dao.*
-import moe.memesta.automemoria.data.remote.SupabaseClientProvider
+import com.automemoria.data.local.AppDatabase
+import com.automemoria.data.local.dao.*
+import com.automemoria.data.remote.SupabaseClientProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "moe.memesta.automemoria"
+    namespace = "com.automemoria"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "moe.memesta.automemoria"
+        applicationId = "com.automemoria"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

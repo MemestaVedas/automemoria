@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.sync
+package com.automemoria.sync
 
 import android.content.Context
 import android.net.ConnectivityManager

@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.ui.kanban
+package com.automemoria.ui.kanban
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells

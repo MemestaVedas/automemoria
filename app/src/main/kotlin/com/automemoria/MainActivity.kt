@@ -1,4 +1,4 @@
-package moe.memesta.automemoria
+package com.automemoria
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import moe.memesta.automemoria.ui.navigation.AppNavHost
-import moe.memesta.automemoria.ui.theme.AutomemoriaTheme
+import com.automemoria.ui.navigation.AppNavHost
+import com.automemoria.ui.theme.AutomemoriaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

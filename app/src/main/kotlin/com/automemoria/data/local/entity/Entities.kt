@@ -1,13 +1,13 @@
-package moe.memesta.automemoria.data.local.entity
+package com.automemoria.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import moe.memesta.automemoria.domain.model.CardPriority
-import moe.memesta.automemoria.domain.model.GoalStatus
-import moe.memesta.automemoria.domain.model.HabitFrequency
-import moe.memesta.automemoria.domain.model.SyncStatus
+import com.automemoria.domain.model.CardPriority
+import com.automemoria.domain.model.GoalStatus
+import com.automemoria.domain.model.HabitFrequency
+import com.automemoria.domain.model.SyncStatus
 
 // ─── Converters are in TypeConverters.kt ─────────────────────────────────────
 

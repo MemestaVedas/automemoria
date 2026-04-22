@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.domain.model
+package com.automemoria.domain.model
 
 import java.time.LocalDate
 import java.time.LocalDateTime

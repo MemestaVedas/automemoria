@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.assist
+package com.automemoria.assist
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import moe.memesta.automemoria.ui.theme.AutomemoriaTheme
+import com.automemoria.ui.theme.AutomemoriaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 enum class QuickCaptureType(val label: String, val icon: ImageVector) {

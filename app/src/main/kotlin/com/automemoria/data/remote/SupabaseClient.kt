@@ -1,6 +1,6 @@
-package moe.memesta.automemoria.data.remote
+package com.automemoria.data.remote
 
-import moe.memesta.automemoria.BuildConfig
+import com.automemoria.BuildConfig
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest

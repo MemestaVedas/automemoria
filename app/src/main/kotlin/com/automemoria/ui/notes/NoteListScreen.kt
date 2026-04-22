@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.ui.notes
+package com.automemoria.ui.notes
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons

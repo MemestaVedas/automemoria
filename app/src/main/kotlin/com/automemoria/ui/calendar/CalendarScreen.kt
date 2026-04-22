@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.ui.calendar
+package com.automemoria.ui.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import moe.memesta.automemoria.ui.theme.AppColors
+import com.automemoria.ui.theme.AppColors
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter

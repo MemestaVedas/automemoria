@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.ui.habits
+package com.automemoria.ui.habits
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -20,10 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import moe.memesta.automemoria.domain.model.Habit
-import moe.memesta.automemoria.domain.model.HabitFrequency
-import moe.memesta.automemoria.ui.navigation.Screen
-import moe.memesta.automemoria.ui.theme.AppColors
+import com.automemoria.domain.model.Habit
+import com.automemoria.domain.model.HabitFrequency
+import com.automemoria.ui.navigation.Screen
+import com.automemoria.ui.theme.AppColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

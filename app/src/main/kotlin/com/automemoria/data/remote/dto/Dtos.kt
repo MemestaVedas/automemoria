@@ -1,4 +1,4 @@
-package moe.memesta.automemoria.data.remote.dto
+package com.automemoria.data.remote.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
