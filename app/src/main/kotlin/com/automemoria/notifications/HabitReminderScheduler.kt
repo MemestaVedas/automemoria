@@ -63,6 +63,9 @@ class HabitReminderScheduler @Inject constructor(
 
     companion object {
         const val ACTION_HABIT_REMINDER = "com.automemoria.action.HABIT_REMINDER"
+        const val ACTION_DONE = "com.automemoria.action.HABIT_DONE"
+        const val ACTION_SNOOZE = "com.automemoria.action.HABIT_SNOOZE"
+        const val ACTION_SKIP = "com.automemoria.action.HABIT_SKIP"
         const val EXTRA_HABIT_ID = "extra_habit_id"
         const val EXTRA_HABIT_NAME = "extra_habit_name"
     }

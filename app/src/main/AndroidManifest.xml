@@ -39,6 +39,14 @@
             android:windowSoftInputMode="adjustResize|stateVisible"
             android:excludeFromRecents="true" />
 
+        <activity
+            android:name=".notifications.ReminderAlarmActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.Automemoria" />
+
         <!-- Android Assist API — registers app as a digital assistant -->
         <service
             android:name=".assist.PersonalAssistantService"
