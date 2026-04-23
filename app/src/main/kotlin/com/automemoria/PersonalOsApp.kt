@@ -3,6 +3,7 @@ package com.automemoria
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.automemoria.notifications.NowFocusWorker
 import com.automemoria.sync.NetworkObserver
 import com.automemoria.sync.SyncWorker
 import dagger.hilt.android.HiltAndroidApp
@@ -42,6 +43,7 @@ class AutomemoriaApp : Application(), Configuration.Provider {
 
         // Schedule periodic tasks
         com.automemoria.notifications.StreakAtRiskWorker.schedule(this)
+        NowFocusWorker.schedule(this)
     }
 
     override fun onTerminate() {
