@@ -29,6 +29,14 @@ class HabitRepository @Inject constructor(
     private val supabase: SupabaseClient,
     private val reminderScheduler: HabitReminderScheduler
 ) {
+    data class DailyCompletionSnapshot(
+        val totalHabits: Int,
+        val completedHabits: Int
+    ) {
+        val completionPercent: Int
+            get() = if (totalHabits == 0) 0 else (completedHabits * 100 / totalHabits)
+    }
+
     // ── Observe (Room → UI) ───────────────────────────────────────────────────
 
     fun observeAllHabits(): Flow<List<Habit>> =
@@ -164,6 +172,36 @@ class HabitRepository @Inject constructor(
         } else {
             createHabit(name = query)
         }
+    }
+
+    suspend fun markAnyActiveHabitDoneToday(): Habit? {
+        val activeHabits = habitDao.getActive()
+        if (activeHabits.isEmpty()) return null
+
+        val todayLogs = habitLogDao.getAllForDate(LocalDate.now().toString())
+        val completedHabitIds = todayLogs.filter { it.completed }.map { it.habitId }.toSet()
+        val nextHabit = activeHabits.firstOrNull { it.id !in completedHabitIds } ?: activeHabits.first()
+
+        toggleHabitCompletion(nextHabit.id)
+        return nextHabit.toDomain()
+    }
+
+    suspend fun getTodayCompletionSnapshot(date: LocalDate = LocalDate.now()): DailyCompletionSnapshot {
+        val activeHabits = habitDao.getActive()
+        if (activeHabits.isEmpty()) {
+            return DailyCompletionSnapshot(totalHabits = 0, completedHabits = 0)
+        }
+
+        val completedHabitIds = habitLogDao.getAllForDate(date.toString())
+            .filter { it.completed }
+            .map { it.habitId }
+            .toSet()
+
+        val completedCount = activeHabits.count { it.id in completedHabitIds }
+        return DailyCompletionSnapshot(
+            totalHabits = activeHabits.size,
+            completedHabits = completedCount
+        )
     }
 
     suspend fun archiveHabit(habitId: String) {

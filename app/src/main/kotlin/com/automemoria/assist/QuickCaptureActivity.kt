@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
@@ -67,6 +68,9 @@ enum class QuickCaptureType(val label: String, val icon: ImageVector) {
 class QuickCaptureActivity : ComponentActivity() {
 
     @Inject
+    lateinit var assistantCommandProcessor: AssistantCommandProcessor
+
+    @Inject
     lateinit var noteRepository: NoteRepository
 
     @Inject
@@ -93,6 +97,12 @@ class QuickCaptureActivity : ComponentActivity() {
                         lifecycleScope.launch {
                             handleQuickCapture(text = text, type = type)
                             finish()
+                        }
+                    },
+                    onAssistantCommand = { command, onResult ->
+                        lifecycleScope.launch {
+                            val result = assistantCommandProcessor.execute(command)
+                            onResult(result.confirmation)
                         }
                     }
                 )
@@ -133,10 +143,13 @@ class QuickCaptureActivity : ComponentActivity() {
 @Composable
 fun QuickCaptureOverlay(
     onDismiss: () -> Unit,
-    onSave: (text: String, type: QuickCaptureType) -> Unit
+    onSave: (text: String, type: QuickCaptureType) -> Unit,
+    onAssistantCommand: (command: String, onResult: (String) -> Unit) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(QuickCaptureType.NOTE) }
+    var assistantMode by remember { mutableStateOf(false) }
+    var assistantConfirmation by remember { mutableStateOf<String?>(null) }
     val focusRequester = remember { FocusRequester() }
 
     Box(
@@ -173,6 +186,27 @@ fun QuickCaptureOverlay(
                     fontWeight = FontWeight.Bold
                 )
 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = assistantMode,
+                        onClick = { assistantMode = !assistantMode },
+                        label = { Text(if (assistantMode) "Assistant On" else "Assistant Off") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Mic, contentDescription = null, modifier = Modifier.size(16.dp))
+                        }
+                    )
+                    if (assistantMode) {
+                        Text(
+                            text = "Try: done, what's next, add a habit for reading",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     QuickCaptureType.entries.forEach { type ->
                         FilterChip(
@@ -194,17 +228,29 @@ fun QuickCaptureOverlay(
                         .focusRequester(focusRequester),
                     placeholder = {
                         Text(
-                            when (selectedType) {
-                                QuickCaptureType.NOTE -> "Note title..."
-                                QuickCaptureType.TASK -> "Task name..."
-                                QuickCaptureType.HABIT -> "Habit name..."
-                                QuickCaptureType.EVENT -> "Event title..."
+                            if (assistantMode) {
+                                "Type a command..."
+                            } else {
+                                when (selectedType) {
+                                    QuickCaptureType.NOTE -> "Note title..."
+                                    QuickCaptureType.TASK -> "Task name..."
+                                    QuickCaptureType.HABIT -> "Habit name..."
+                                    QuickCaptureType.EVENT -> "Event title..."
+                                }
                             }
                         )
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )
+
+                assistantConfirmation?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -214,13 +260,27 @@ fun QuickCaptureOverlay(
                         Text("Cancel")
                     }
                     Button(
-                        onClick = { if (text.isNotBlank()) onSave(text, selectedType) },
+                        onClick = {
+                            if (text.isBlank()) return@Button
+                            if (assistantMode) {
+                                onAssistantCommand(text) { confirmation ->
+                                    assistantConfirmation = confirmation
+                                    text = ""
+                                }
+                            } else {
+                                onSave(text, selectedType)
+                            }
+                        },
                         enabled = text.isNotBlank(),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(
+                            if (assistantMode) Icons.Default.Mic else Icons.Default.Save,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
                         Spacer(Modifier.width(6.dp))
-                        Text("Save")
+                        Text(if (assistantMode) "Run" else "Save")
                     }
                 }
             }

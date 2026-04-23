@@ -76,6 +76,50 @@ class CalendarRepository @Inject constructor(
         eventDao.softDelete(id, LocalDateTime.now().toIsoString())
     }
 
+    suspend fun getCurrentOrNextEvent(now: LocalDateTime = LocalDateTime.now()): CalendarEvent? {
+        val dayStart = now.toLocalDate().atStartOfDay()
+        val dayEnd = dayStart.plusDays(1).minusSeconds(1)
+        val events = eventDao.getInRange(
+            from = dayStart.toIsoString(),
+            to = dayEnd.toIsoString()
+        ).map { it.toDomain() }
+
+        val current = events.firstOrNull { event ->
+            val end = event.endTime ?: event.startTime.plusHours(1)
+            !now.isBefore(event.startTime) && now.isBefore(end)
+        }
+        if (current != null) return current
+
+        return events.firstOrNull { it.startTime.isAfter(now) }
+    }
+
+    suspend fun markCurrentEventDone(now: LocalDateTime = LocalDateTime.now()): CalendarEvent? {
+        val event = getCurrentOrNextEvent(now) ?: return null
+        val updatedTitle = event.title.withStatePrefix("Done")
+        update(event.copy(title = updatedTitle))
+        return event.copy(title = updatedTitle)
+    }
+
+    suspend fun markCurrentEventSkipped(now: LocalDateTime = LocalDateTime.now()): CalendarEvent? {
+        val event = getCurrentOrNextEvent(now) ?: return null
+        val updatedTitle = event.title.withStatePrefix("Skipped")
+        update(event.copy(title = updatedTitle))
+        return event.copy(title = updatedTitle)
+    }
+
+    suspend fun snoozeCurrentEventBy(minutes: Long, now: LocalDateTime = LocalDateTime.now()): CalendarEvent? {
+        val event = getCurrentOrNextEvent(now) ?: return null
+        val shiftedStart = event.startTime.plusMinutes(minutes)
+        val shiftedEnd = event.endTime?.plusMinutes(minutes)
+        val updated = event.copy(
+            title = event.title.withStatePrefix("Snoozed"),
+            startTime = shiftedStart,
+            endTime = shiftedEnd
+        )
+        update(updated)
+        return updated
+    }
+
     // ── Sync operations ───────────────────────────────────────────────────────
 
     suspend fun pushPendingToSupabase() {
@@ -132,6 +176,11 @@ class CalendarRepository @Inject constructor(
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
 private fun LocalDateTime.toIsoString() = format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+
+private fun String.withStatePrefix(state: String): String {
+    val cleaned = replace(Regex("^\\[(Done|Skipped|Snoozed)]\\s*"), "")
+    return "[$state] $cleaned"
+}
 
 fun CalendarEventEntity.toDomain(): CalendarEvent = CalendarEvent(
     id = id,

@@ -154,6 +154,14 @@ interface CalendarEventDao {
     @Query("SELECT * FROM calendar_events WHERE id = :id")
     suspend fun getById(id: String): CalendarEventEntity?
 
+    @Query("""
+        SELECT * FROM calendar_events
+        WHERE deletedAt IS NULL
+        AND startTime BETWEEN :from AND :to
+        ORDER BY startTime ASC
+    """)
+    suspend fun getInRange(from: String, to: String): List<CalendarEventEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(event: CalendarEventEntity)
 
