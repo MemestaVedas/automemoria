@@ -11,7 +11,8 @@ import javax.inject.Inject
 
 data class NotesUiState(
     val notes: List<Note> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val searchQuery: String = ""
 )
 
 @HiltViewModel
@@ -19,8 +20,23 @@ class NoteViewModel @Inject constructor(
     private val repository: NoteRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<NotesUiState> = repository.observeAll()
-        .map { NotesUiState(notes = it, isLoading = false) }
+    private val searchQuery = MutableStateFlow("")
+
+    val uiState: StateFlow<NotesUiState> = searchQuery
+        .flatMapLatest { query ->
+            val source = if (query.isBlank()) {
+                repository.observeAll()
+            } else {
+                repository.search(query.trim())
+            }
+            source.map { notes ->
+                NotesUiState(
+                    notes = notes,
+                    isLoading = false,
+                    searchQuery = query
+                )
+            }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -31,5 +47,9 @@ class NoteViewModel @Inject constructor(
         viewModelScope.launch {
             repository.save(title = title, content = content)
         }
+    }
+
+    fun onSearchQueryChange(query: String) {
+        searchQuery.value = query
     }
 }

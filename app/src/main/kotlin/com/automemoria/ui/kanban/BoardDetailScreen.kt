@@ -33,6 +33,10 @@ fun BoardDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val board = uiState.board
+    var addCardColumnId by remember { mutableStateOf<String?>(null) }
+    var newCardTitle by remember { mutableStateOf("") }
+    var showAddColumnDialog by remember { mutableStateOf(false) }
+    var newColumnTitle by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -68,15 +72,98 @@ fun BoardDetailScreen(
             items(uiState.columns) { colWithCards ->
                 KanbanColumn(
                     column = colWithCards,
-                    onAddCard = { /* TODO */ },
-                    onCardClick = { /* TODO */ }
+                    onAddCard = { addCardColumnId = colWithCards.column.id },
+                    onCardClick = { /* Card detail editor can be added in next iteration. */ }
                 )
             }
             
             item {
-                AddColumnButton(onClick = { /* TODO */ })
+                AddColumnButton(onClick = { showAddColumnDialog = true })
             }
         }
+    }
+
+    if (addCardColumnId != null) {
+        AlertDialog(
+            onDismissRequest = {
+                addCardColumnId = null
+                newCardTitle = ""
+            },
+            title = { Text("New Card") },
+            text = {
+                OutlinedTextField(
+                    value = newCardTitle,
+                    onValueChange = { newCardTitle = it },
+                    label = { Text("Card title") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val columnId = addCardColumnId
+                        if (columnId != null && newCardTitle.isNotBlank()) {
+                            viewModel.addCard(columnId = columnId, title = newCardTitle)
+                            addCardColumnId = null
+                            newCardTitle = ""
+                        }
+                    }
+                ) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        addCardColumnId = null
+                        newCardTitle = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showAddColumnDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showAddColumnDialog = false
+                newColumnTitle = ""
+            },
+            title = { Text("New Column") },
+            text = {
+                OutlinedTextField(
+                    value = newColumnTitle,
+                    onValueChange = { newColumnTitle = it },
+                    label = { Text("Column title") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newColumnTitle.isNotBlank()) {
+                            viewModel.addColumn(newColumnTitle)
+                            showAddColumnDialog = false
+                            newColumnTitle = ""
+                        }
+                    }
+                ) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddColumnDialog = false
+                        newColumnTitle = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

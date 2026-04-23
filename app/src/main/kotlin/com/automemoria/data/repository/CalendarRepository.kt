@@ -205,7 +205,3 @@ fun CalendarEventEntity.toDto(): CalendarEventDto = CalendarEventDto(
 
 private fun formatDateTime(dateTime: LocalDateTime): String =
     dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-
-private fun updateSyncStatus(id: String, status: SyncStatus) {
-    // TODO: Call dao method
-}

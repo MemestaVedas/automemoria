@@ -18,6 +18,9 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE deletedAt IS NULL AND isArchived = 0 ORDER BY createdAt ASC")
     fun observeActive(): Flow<List<HabitEntity>>
 
+    @Query("SELECT * FROM habits WHERE deletedAt IS NULL AND isArchived = 0 ORDER BY createdAt ASC")
+    suspend fun getActive(): List<HabitEntity>
+
     @Query("SELECT * FROM habits WHERE id = :id")
     suspend fun getById(id: String): HabitEntity?
 
@@ -177,6 +180,9 @@ interface BoardDao {
     @Query("SELECT * FROM boards WHERE deletedAt IS NULL ORDER BY sortOrder ASC")
     fun observeAll(): Flow<List<BoardEntity>>
 
+    @Query("SELECT * FROM boards WHERE deletedAt IS NULL ORDER BY sortOrder ASC, createdAt ASC LIMIT 1")
+    suspend fun getFirstActive(): BoardEntity?
+
     @Query("SELECT * FROM boards WHERE id = :id")
     suspend fun getById(id: String): BoardEntity?
 
@@ -204,11 +210,17 @@ interface BoardColumnDao {
     @Query("SELECT * FROM board_columns WHERE boardId = :boardId ORDER BY sortOrder ASC")
     fun observeForBoard(boardId: String): Flow<List<BoardColumnEntity>>
 
+    @Query("SELECT * FROM board_columns WHERE boardId = :boardId ORDER BY sortOrder ASC")
+    suspend fun getForBoard(boardId: String): List<BoardColumnEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(column: BoardColumnEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(columns: List<BoardColumnEntity>)
+
+    @Query("UPDATE board_columns SET syncStatus = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: SyncStatus)
 
     @Query("SELECT * FROM board_columns WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<BoardColumnEntity>
@@ -218,6 +230,9 @@ interface BoardColumnDao {
 interface CardDao {
     @Query("SELECT * FROM cards WHERE columnId = :columnId AND deletedAt IS NULL ORDER BY sortOrder ASC")
     fun observeForColumn(columnId: String): Flow<List<CardEntity>>
+
+    @Query("SELECT * FROM cards WHERE columnId = :columnId AND deletedAt IS NULL ORDER BY sortOrder ASC")
+    suspend fun getForColumn(columnId: String): List<CardEntity>
 
     @Query("SELECT * FROM cards WHERE id = :id")
     suspend fun getById(id: String): CardEntity?
@@ -230,6 +245,12 @@ interface CardDao {
 
     @Query("UPDATE cards SET deletedAt = :deletedAt, syncStatus = 'PENDING_DELETE' WHERE id = :id")
     suspend fun softDelete(id: String, deletedAt: String)
+
+    @Query("UPDATE cards SET syncStatus = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: SyncStatus)
+
+    @Query("DELETE FROM cards WHERE id = :id")
+    suspend fun hardDelete(id: String)
 
     @Query("SELECT * FROM cards WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<CardEntity>

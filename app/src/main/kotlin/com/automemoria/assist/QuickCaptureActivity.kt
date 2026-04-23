@@ -3,24 +3,58 @@ package com.automemoria.assist
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import com.automemoria.data.repository.BoardRepository
+import com.automemoria.data.repository.CalendarRepository
+import com.automemoria.data.repository.HabitRepository
+import com.automemoria.data.repository.NoteRepository
+import com.automemoria.sync.SyncPreferences
 import com.automemoria.ui.theme.AutomemoriaTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import javax.inject.Inject
 
 enum class QuickCaptureType(val label: String, val icon: ImageVector) {
     NOTE("Note", Icons.Default.Notes),
@@ -32,9 +66,23 @@ enum class QuickCaptureType(val label: String, val icon: ImageVector) {
 @AndroidEntryPoint
 class QuickCaptureActivity : ComponentActivity() {
 
+    @Inject
+    lateinit var noteRepository: NoteRepository
+
+    @Inject
+    lateinit var boardRepository: BoardRepository
+
+    @Inject
+    lateinit var habitRepository: HabitRepository
+
+    @Inject
+    lateinit var calendarRepository: CalendarRepository
+
+    @Inject
+    lateinit var syncPreferences: SyncPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Make window transparent so the overlay floats above whatever app is open
         window.setBackgroundDrawableResource(android.R.color.transparent)
 
         setContent {
@@ -42,21 +90,43 @@ class QuickCaptureActivity : ComponentActivity() {
                 QuickCaptureOverlay(
                     onDismiss = { finish() },
                     onSave = { text, type ->
-                        handleQuickCapture(text, type)
-                        finish()
+                        lifecycleScope.launch {
+                            handleQuickCapture(text = text, type = type)
+                            finish()
+                        }
                     }
                 )
             }
         }
     }
 
-    private fun handleQuickCapture(text: String, type: QuickCaptureType) {
-        // TODO: inject repositories via Hilt and dispatch accordingly
-        // For Phase 7 full implementation:
-        // QuickCaptureType.NOTE  → NoteRepository.createNote(title = text)
-        // QuickCaptureType.TASK  → CardRepository.createCard(title = text, columnId = defaultColumnId)
-        // QuickCaptureType.HABIT → open habit selector sheet
-        // QuickCaptureType.EVENT → CalendarRepository.createEvent(title = text, startTime = now)
+    private suspend fun handleQuickCapture(text: String, type: QuickCaptureType) {
+        val trimmed = text.trim()
+        if (trimmed.isBlank()) return
+
+        when (type) {
+            QuickCaptureType.NOTE -> {
+                noteRepository.save(title = trimmed, content = "")
+            }
+
+            QuickCaptureType.TASK -> {
+                val defaultBoardId = runCatching { syncPreferences.getDefaultBoardId() }.getOrNull()
+                boardRepository.quickCaptureTask(title = trimmed, defaultBoardId = defaultBoardId)
+            }
+
+            QuickCaptureType.HABIT -> {
+                habitRepository.quickCaptureHabit(trimmed)
+            }
+
+            QuickCaptureType.EVENT -> {
+                val start = LocalDateTime.now().withSecond(0).withNano(0)
+                calendarRepository.create(
+                    title = trimmed,
+                    startTime = start,
+                    endTime = start.plusHours(1)
+                )
+            }
+        }
     }
 }
 
@@ -69,18 +139,16 @@ fun QuickCaptureOverlay(
     var selectedType by remember { mutableStateOf(QuickCaptureType.NOTE) }
     val focusRequester = remember { FocusRequester() }
 
-    // Dim background — tap outside to dismiss
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clickable(onClick = onDismiss)
     ) {
-        // Bottom sheet card — don't propagate taps to the dimmer
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .clickable(enabled = false) { /* consume */ },
+                .clickable(enabled = false) { },
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -92,22 +160,19 @@ fun QuickCaptureOverlay(
                     .padding(top = 20.dp, bottom = 36.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Drag handle
                 Box(
                     modifier = Modifier
                         .width(40.dp)
                         .height(4.dp)
                         .align(Alignment.CenterHorizontally)
-                        .also { /* rounded */ }
                 )
 
                 Text(
-                    "Quick Capture",
+                    text = "Quick Capture",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
-                // Type selector
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     QuickCaptureType.entries.forEach { type ->
                         FilterChip(
@@ -121,7 +186,6 @@ fun QuickCaptureOverlay(
                     }
                 }
 
-                // Text input
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
@@ -131,9 +195,9 @@ fun QuickCaptureOverlay(
                     placeholder = {
                         Text(
                             when (selectedType) {
-                                QuickCaptureType.NOTE  -> "Note title..."
-                                QuickCaptureType.TASK  -> "Task name..."
-                                QuickCaptureType.HABIT -> "Search habit..."
+                                QuickCaptureType.NOTE -> "Note title..."
+                                QuickCaptureType.TASK -> "Task name..."
+                                QuickCaptureType.HABIT -> "Habit name..."
                                 QuickCaptureType.EVENT -> "Event title..."
                             }
                         )
@@ -142,7 +206,6 @@ fun QuickCaptureOverlay(
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // Action buttons
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()

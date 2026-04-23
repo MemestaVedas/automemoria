@@ -30,7 +30,6 @@ fun NoteListScreen(
     viewModel: NoteViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -67,8 +66,8 @@ fun NoteListScreen(
         ) {
             // ── Search Bar ────────────────────────────────────────────────
             OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+                value = uiState.searchQuery,
+                onValueChange = viewModel::onSearchQueryChange,
                 placeholder = { Text("Search notes or #tags") },
                 modifier = Modifier
                     .fillMaxWidth()

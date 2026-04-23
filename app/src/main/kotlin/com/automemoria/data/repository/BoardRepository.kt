@@ -1,12 +1,17 @@
 package com.automemoria.data.repository
 
-import com.automemoria.data.local.dao.BoardDao
 import com.automemoria.data.local.dao.BoardColumnDao
+import com.automemoria.data.local.dao.BoardDao
 import com.automemoria.data.local.dao.CardDao
-import com.automemoria.data.local.entity.*
+import com.automemoria.data.local.entity.BoardColumnEntity
+import com.automemoria.data.local.entity.BoardEntity
+import com.automemoria.data.local.entity.CardEntity
 import com.automemoria.data.remote.dto.BoardDto
-import com.automemoria.domain.model.*
-import io.github.jan.supabase.SupabaseClient
+import com.automemoria.domain.model.Board
+import com.automemoria.domain.model.BoardColumn
+import com.automemoria.domain.model.Card
+import com.automemoria.domain.model.CardPriority
+import com.automemoria.domain.model.SyncStatus
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -42,16 +47,13 @@ class BoardRepository @Inject constructor(
         linkedGoalId: String? = null
     ): Board {
         val now = LocalDateTime.now()
-        // Simple sort order logic
-        val nextOrder = 0 // In real app, fetch max sort order
-
         val entity = BoardEntity(
             id = UUID.randomUUID().toString(),
             title = title,
             description = description,
             icon = icon,
             color = color,
-            sortOrder = nextOrder,
+            sortOrder = 0,
             linkedGoalId = linkedGoalId,
             syncStatus = SyncStatus.PENDING_UPLOAD,
             createdAt = now.toIsoString(),
@@ -74,10 +76,73 @@ class BoardRepository @Inject constructor(
         boardDao.softDelete(id, LocalDateTime.now().toIsoString())
     }
 
-    // ── Sync operations ───────────────────────────────────────────────────────
+    suspend fun createColumn(
+        boardId: String,
+        title: String,
+        color: String? = null
+    ): BoardColumn {
+        val now = LocalDateTime.now()
+        val nextOrder = (columnDao.getForBoard(boardId).maxOfOrNull { it.sortOrder } ?: -1) + 1
+        val entity = BoardColumnEntity(
+            id = UUID.randomUUID().toString(),
+            boardId = boardId,
+            title = title,
+            color = color,
+            sortOrder = nextOrder,
+            createdAt = now.toIsoString(),
+            updatedAt = now.toIsoString(),
+            syncStatus = SyncStatus.PENDING_UPLOAD
+        )
+        columnDao.upsert(entity)
+        return entity.toDomain()
+    }
+
+    suspend fun createCard(
+        columnId: String,
+        title: String,
+        description: String? = null,
+        priority: CardPriority = CardPriority.NONE
+    ): Card {
+        val now = LocalDateTime.now()
+        val nextOrder = (cardDao.getForColumn(columnId).maxOfOrNull { it.sortOrder } ?: -1) + 1
+        val entity = CardEntity(
+            id = UUID.randomUUID().toString(),
+            columnId = columnId,
+            title = title,
+            description = description,
+            priority = priority,
+            dueDate = null,
+            labels = "[]",
+            sortOrder = nextOrder,
+            isCompleted = false,
+            linkedNoteId = null,
+            createdAt = now.toIsoString(),
+            updatedAt = now.toIsoString(),
+            deletedAt = null,
+            syncStatus = SyncStatus.PENDING_UPLOAD
+        )
+        cardDao.upsert(entity)
+        return entity.toDomain()
+    }
+
+    suspend fun quickCaptureTask(title: String, defaultBoardId: String? = null): Card {
+        val board = when {
+            defaultBoardId.isNullOrBlank() -> null
+            else -> boardDao.getById(defaultBoardId)?.takeIf { it.deletedAt == null }
+        } ?: boardDao.getFirstActive()
+
+        val boardId = board?.id ?: create(
+            title = "Inbox",
+            description = "Quick-captured tasks"
+        ).id
+
+        val columnId = columnDao.getForBoard(boardId).firstOrNull()?.id
+            ?: createColumn(boardId = boardId, title = "Inbox").id
+
+        return createCard(columnId = columnId, title = title)
+    }
 
     suspend fun pushPendingToSupabase() {
-        // 1. Boards
         val pendingBoards = boardDao.getPendingSync()
         if (pendingBoards.isNotEmpty()) {
             val toUpsert = pendingBoards.filter { it.syncStatus == SyncStatus.PENDING_UPLOAD }
@@ -87,7 +152,6 @@ class BoardRepository @Inject constructor(
                 try {
                     supabase.from("boards").upsert(toUpsert.map { it.toDto() })
                     toUpsert.forEach { boardDao.updateSyncStatus(it.id, SyncStatus.SYNCED) }
-                    Timber.d("Synced ${toUpsert.size} boards to Supabase")
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to push boards to Supabase")
                 }
@@ -101,38 +165,49 @@ class BoardRepository @Inject constructor(
                         }) { filter { eq("id", entity.id) } }
                         boardDao.hardDelete(entity.id)
                     }
-                    Timber.d("Deleted ${toDelete.size} boards from Supabase")
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to delete boards from Supabase")
                 }
             }
         }
 
-        // 2. Columns
         val pendingColumns = columnDao.getPendingSync()
         if (pendingColumns.isNotEmpty()) {
             val toUpsert = pendingColumns.filter { it.syncStatus == SyncStatus.PENDING_UPLOAD }
             if (toUpsert.isNotEmpty()) {
                 try {
                     supabase.from("board_columns").upsert(toUpsert.map { it.toDto() })
-                    // columnDao.updateSyncStatus(it.id, SyncStatus.SYNCED) // Add this to DAO if needed
-                    Timber.d("Synced ${toUpsert.size} columns to Supabase")
+                    toUpsert.forEach { columnDao.updateSyncStatus(it.id, SyncStatus.SYNCED) }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to push columns to Supabase")
                 }
             }
         }
 
-        // 3. Cards
         val pendingCards = cardDao.getPendingSync()
         if (pendingCards.isNotEmpty()) {
             val toUpsert = pendingCards.filter { it.syncStatus == SyncStatus.PENDING_UPLOAD }
+            val toDelete = pendingCards.filter { it.syncStatus == SyncStatus.PENDING_DELETE }
+
             if (toUpsert.isNotEmpty()) {
                 try {
                     supabase.from("cards").upsert(toUpsert.map { it.toDto() })
-                    Timber.d("Synced ${toUpsert.size} cards to Supabase")
+                    toUpsert.forEach { cardDao.updateSyncStatus(it.id, SyncStatus.SYNCED) }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to push cards to Supabase")
+                }
+            }
+
+            if (toDelete.isNotEmpty()) {
+                try {
+                    toDelete.forEach { entity ->
+                        supabase.from("cards").update({
+                            set("deleted_at", entity.deletedAt)
+                        }) { filter { eq("id", entity.id) } }
+                        cardDao.hardDelete(entity.id)
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to delete cards from Supabase")
                 }
             }
         }
@@ -140,7 +215,6 @@ class BoardRepository @Inject constructor(
 
     suspend fun pullFromSupabase(since: String) {
         try {
-            // Pull Boards
             val remoteBoards = supabase.from("boards")
                 .select { filter { gte("updated_at", since) } }
                 .decodeList<BoardDto>()
@@ -151,7 +225,6 @@ class BoardRepository @Inject constructor(
                 }
             }
 
-            // Pull Columns
             val remoteColumns = supabase.from("board_columns")
                 .select { filter { gte("updated_at", since) } }
                 .decodeList<com.automemoria.data.remote.dto.BoardColumnDto>()
@@ -159,22 +232,17 @@ class BoardRepository @Inject constructor(
                 columnDao.upsert(dto.toEntity())
             }
 
-            // Pull Cards
             val remoteCards = supabase.from("cards")
                 .select { filter { gte("updated_at", since) } }
                 .decodeList<com.automemoria.data.remote.dto.CardDto>()
             remoteCards.forEach { dto ->
                 cardDao.upsert(dto.toEntity())
             }
-
-            Timber.d("Pulled Kanban data from Supabase")
         } catch (e: Exception) {
             Timber.e(e, "Failed to pull Kanban data from Supabase")
         }
     }
 }
-
-// ── Mappers ───────────────────────────────────────────────────────────────────
 
 private fun LocalDateTime.toIsoString() = format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
@@ -232,8 +300,6 @@ fun BoardEntity.toDto(): BoardDto = BoardDto(
     deletedAt = deletedAt
 )
 
-// ─── BoardColumn Mappers ──────────────────────────────────────────────────────
-
 fun BoardColumnEntity.toDomain() = BoardColumn(
     id = id,
     boardId = boardId,
@@ -251,7 +317,7 @@ fun BoardColumn.toEntity() = BoardColumnEntity(
     color = color,
     sortOrder = sortOrder,
     createdAt = formatDateTime(createdAt),
-    updatedAt = formatDateTime(createdAt), // Simplified
+    updatedAt = formatDateTime(createdAt),
     syncStatus = syncStatus
 )
 
@@ -276,8 +342,6 @@ fun BoardColumnEntity.toDto() = com.automemoria.data.remote.dto.BoardColumnDto(
     updatedAt = updatedAt
 )
 
-// ─── Card Mappers ───────────────────────────────────────────────────────────
-
 fun CardEntity.toDomain() = Card(
     id = id,
     columnId = columnId,
@@ -285,7 +349,7 @@ fun CardEntity.toDomain() = Card(
     description = description,
     priority = priority,
     dueDate = dueDate?.let { LocalDate.parse(it) },
-    labels = labels.trim('[', ']').split(",").mapNotNull { it.trim().takeIf { s -> s.isNotEmpty() } },
+    labels = labels.trim('[', ']').split(",").mapNotNull { it.trim().takeIf { value -> value.isNotEmpty() } },
     sortOrder = sortOrder,
     isCompleted = isCompleted,
     linkedNoteId = linkedNoteId,
@@ -335,7 +399,7 @@ fun CardEntity.toDto() = com.automemoria.data.remote.dto.CardDto(
     description = description,
     priority = priority.name.lowercase(),
     dueDate = dueDate,
-    labels = labels.trim('[', ']').split(",").mapNotNull { it.trim().takeIf { s -> s.isNotEmpty() } },
+    labels = labels.trim('[', ']').split(",").mapNotNull { it.trim().takeIf { value -> value.isNotEmpty() } },
     sortOrder = sortOrder,
     isCompleted = isCompleted,
     linkedNoteId = linkedNoteId,

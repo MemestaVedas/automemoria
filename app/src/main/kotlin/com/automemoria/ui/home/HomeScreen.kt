@@ -1,5 +1,6 @@
 package com.automemoria.ui.home
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,11 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.automemoria.assist.QuickCaptureActivity
 import com.automemoria.ui.common.iconForKey
 import com.automemoria.ui.navigation.Screen
 import com.automemoria.ui.theme.AppColors
@@ -36,6 +39,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val today = LocalDate.now()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -85,7 +89,7 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: open quick capture bottom sheet */ },
+                onClick = { context.startActivity(Intent(context, QuickCaptureActivity::class.java)) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Quick capture")

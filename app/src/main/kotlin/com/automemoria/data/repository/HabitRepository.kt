@@ -151,6 +151,21 @@ class HabitRepository @Inject constructor(
         }
     }
 
+    suspend fun quickCaptureHabit(input: String) {
+        val query = input.trim()
+        if (query.isBlank()) return
+
+        val activeHabits = habitDao.getActive()
+        val matched = activeHabits.firstOrNull { it.name.equals(query, ignoreCase = true) }
+            ?: activeHabits.firstOrNull { it.name.contains(query, ignoreCase = true) }
+
+        if (matched != null) {
+            toggleHabitCompletion(matched.id)
+        } else {
+            createHabit(name = query)
+        }
+    }
+
     suspend fun archiveHabit(habitId: String) {
         val existing = habitDao.getById(habitId) ?: return
         habitDao.upsert(

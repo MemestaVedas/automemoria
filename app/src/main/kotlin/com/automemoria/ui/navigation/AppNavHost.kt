@@ -28,6 +28,7 @@ import com.automemoria.ui.notes.NoteEditorScreen
 import com.automemoria.ui.wiki.WikiScreen
 import com.automemoria.ui.graph.GraphScreen
 import com.automemoria.ui.settings.SettingsScreen
+import com.automemoria.ui.setup.SetupScreen
 
 // ─── Route definitions ────────────────────────────────────────────────────────
 
@@ -136,6 +137,7 @@ fun AppNavHost() {
             popEnterTransition  = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) + fadeIn() },
             popExitTransition   = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) + fadeOut() }
         ) {
+            composable(Screen.Setup.route)    { SetupScreen(navController = navController) }
             composable(Screen.Home.route)     { HomeScreen(navController) }
             composable(Screen.Habits.route)   { HabitListScreen(navController) }
             composable(Screen.Goals.route)    { GoalListScreen(navController) }

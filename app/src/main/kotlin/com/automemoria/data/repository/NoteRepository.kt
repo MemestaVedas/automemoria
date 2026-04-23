@@ -35,10 +35,9 @@ class NoteRepository @Inject constructor(
 
     fun observeBacklinks(noteId: String): Flow<List<Note>> =
         linkDao.observeBacklinks(noteId).map { links ->
-            // In a real app, you might want to fetch the actual notes here.
-            // For now, we return empty list or simplify.
-            // Actually, the DAO returns NoteLinkEntity, we'd need to join or fetch.
-            emptyList()
+            links.mapNotNull { link ->
+                noteDao.getById(link.sourceNoteId)?.toDomain()
+            }
         }
 
     suspend fun save(
@@ -78,7 +77,7 @@ class NoteRepository @Inject constructor(
         val matches = pattern.findAll(content)
         
         // Remove old links from this note
-        // linkDao.deleteBySource(sourceId)
+        linkDao.deleteAllForSource(sourceId)
         
         matches.forEach { match ->
             val targetTitle = match.groupValues[1]
@@ -238,11 +237,3 @@ fun NoteEntity.toDto(): NoteDto = NoteDto(
 
 private fun formatDateTime(dateTime: LocalDateTime): String =
     dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-
-private fun updateSyncStatus(id: String, status: SyncStatus) {
-    // TODO: Call dao method
-}
-
-private fun hardDelete(id: String) {
-    // TODO: Call dao method
-}

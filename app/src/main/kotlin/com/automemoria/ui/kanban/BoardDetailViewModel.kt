@@ -61,8 +61,16 @@ class BoardDetailViewModel @Inject constructor(
     )
 
     fun addCard(columnId: String, title: String) {
+        if (title.isBlank()) return
         viewModelScope.launch {
-            // TODO: implement card creation in repository
+            repository.createCard(columnId = columnId, title = title.trim())
+        }
+    }
+
+    fun addColumn(title: String) {
+        if (title.isBlank()) return
+        viewModelScope.launch {
+            repository.createColumn(boardId = boardId, title = title.trim())
         }
     }
 }
